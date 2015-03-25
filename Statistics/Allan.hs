@@ -7,13 +7,15 @@
 module Statistics.Allan
        ( integrate
        , avar
+       , avars
        , adev
-       , tauSigma
-       , maxTaus
+       , adevs
        ) where
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
+
+type Tau0 = Int
 
 
 -- | All the functions in this module take phase error sequences as
@@ -22,27 +24,81 @@ import qualified Data.Vector.Generic as V
 integrate :: (Num a, Vector v a) => v a -> v a
 integrate xs = V.scanl' (+) 0 xs
 
-avar :: forall v a. (Fractional a, Vector v a) => Int -> Int -> v a -> a
-avar tau0 n xs = sumsq / fromIntegral divisor
-  where divisor = 2 * n^2 * tau0^2 * (V.length xs - 2*n)
-        sumsq = V.sum (V.generate (V.length xs - 2*n) step :: v a)
-          where step i = (xs!(i+2*n) - 2*(xs!(i+n)) + xs!i)^2
 
-adev :: (Floating a, Vector v a) => Int -> Int -> v a -> a
-adev tau0 n xs = sqrt (avar tau0 n xs)
+avar :: forall v a. (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+avar tau0 m xs = sumsq / fromIntegral divisor
+  where divisor = 2 * m^2 * tau0^2 * (V.length xs - 2*m)
+        sumsq = V.sum (V.generate (V.length xs - 2*m) step :: v a)
+          where step i = (xs!(i+2*m) - 2*(xs!(i+m)) + xs!i)^2
 
--- | Generate a tau-sigma table for the number of @ns@ specified.  The
--- nth position of the result corresponds to the value of the
--- statistic at a sampling interval of @(n+1)*tau0@.
---
--- Example use:
---
--- > tauSigma (adev 86400) 7 timeErrorData
-tauSigma :: (Vector v a, Vector v Int) =>
-            (Int -> v a -> a) -> Int -> v a -> v a
-tauSigma estimator ns xs = V.map step (V.enumFromN 1 howManyTaus)
-  where step n = estimator n xs 
-        howManyTaus = min ns (maxTaus xs)
+adev :: (Floating a, Vector v a) => Tau0-> Int -> v a -> a
+adev tau0 m xs = sqrt (avar tau0 m xs)
 
-maxTaus :: Vector v a => v a -> Int
-maxTaus xs = (V.length xs - 1) `div` 2
+avars :: (Fractional a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+avars tau0 xs = map step [1..maxTaus]
+  where step m = (m, avar tau0 m xs)
+        maxTaus = V.length xs `div` 5
+                    
+adevs :: (Floating a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+adevs tau0 xs = map step (avars tau0 xs)
+  where step (m, s) = (m, sqrt s)
+
+
+-- Below here is untested yet...
+
+theo1 :: forall v a. (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+theo1 tau0 m xs
+  | even m && 10 <= m && m < V.length xs = sumsq / divisor
+  where divisor = fromIntegral ((V.length xs - m) * (m * tau0)^2)
+        sumsq = V.sum (V.generate (V.length xs - m) outer :: v a)
+        outer i = V.sum (V.generate (m `div` 2) inner :: v a)
+          where inner d = ((xs!i - xs!(i - d + (m `div` 2)))
+                               + (xs!(i+m) - xs!(i + d + (m `div` 2))))^2
+                          / divisor'
+                  where divisor' = fromIntegral $ (m `div` 2) - d
+
+theo1s :: (Fractional a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+theo1s tau0 xs = map step taus
+  where step m = (m, theo1 tau0 m xs)
+        taus = [m | m <- [10 .. (V.length xs `div` 4) * 3], even m]
+
+theo1devs :: (Floating a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+theo1devs tau0 xs = map step (theo1s tau0 xs)
+  where step (m, s) = (m, sqrt s)
+
+
+theoBR :: forall v a. (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+theoBR tau0 m xs | even m = (theSum / (fromIntegral n + 1)) * theo1 tau0 m xs
+  where n = floor (fromIntegral (V.length xs) / 6 - 3)
+        theSum = V.sum (V.generate (n+1) step :: v a)
+        step i = avar tau0 (9 + 3*i) xs / theo1 tau0 (12 + 4*i) xs
+
+theoBRs :: (Fractional a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+theoBRs tau0 xs = map step taus
+  where step m = (m, theoBR tau0 m xs)
+        taus = [m | m <- [10 .. (V.length xs `div` 4) * 3], even m]
+
+theoBRdevs :: (Floating a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+theoBRdevs tau0 xs = map step (theoBRs tau0 xs)
+  where step (m, s) = (m, sqrt s)
+
+
+theoHs :: (Fractional a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+theoHs tau0 xs = avars tau0 xs ++ theoBRs tau0 xs
+
+theoHdevs :: (Floating a, Vector v a) => Tau0 -> v a -> [(Int, a)]
+theoHdevs tau0 xs = map step (theoHs tau0 xs)
+  where step (m, s) = (m, sqrt s)
+
+theoH :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+theoH tau0 m xs
+  | m <= (k `div` tau0) = avar tau0 m xs
+  | (fromIntegral k / (0.75 * fromIntegral tau0) <= fromIntegral m)
+ && (m <= V.length xs - 1) && even m =
+      theoBR tau0 m xs
+  | otherwise = 0.0 / 0.0
+  where k = (V.length xs `div` 5) * tau0
+
+theoHdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+theoHdev tau0 m xs = sqrt (theoH tau0 m xs)
+

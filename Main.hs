@@ -23,13 +23,7 @@ main = do result <- runExceptT main'
 main' :: ExceptT String IO ()
 main' = do input <- lift BS.getContents
            errors <- ExceptT $ return (readErrors input)
-           lift $ BS.putStr (writeResults (analyze errors))
-
-analyze :: U.Vector Double -> U.Vector Double
-analyze errors = tauSigma (adev 86400) (maxTaus errors) errors
+           lift $ BS.putStr (encode (adevs 86400 errors))
 
 readErrors :: ByteString -> Either String (U.Vector Double)
 readErrors input = fmap (V.convert . fmap fromOnly) $ decode NoHeader input
-
-writeResults :: U.Vector Double -> ByteString
-writeResults results = encode (map Only (V.toList results))
