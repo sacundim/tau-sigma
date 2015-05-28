@@ -47,6 +47,7 @@ cabal-version:       >=1.10
 
 
 executable tau-sigma
+  hs-source-dirs:      src
   -- .hs or .lhs file containing the Main module.
   main-is:             Main.hs
   
