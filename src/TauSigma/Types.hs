@@ -8,6 +8,7 @@ import Control.Applicative
 import Data.Csv hiding (decode, encode)
 import qualified Data.Vector.Generic as G
 
+
 -- | A tau/sigma pair.
 data TauSigma = TauSigma { tau :: !Int, sigma :: !Double }
 

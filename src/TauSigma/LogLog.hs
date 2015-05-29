@@ -1,13 +1,30 @@
+-- | Log/log graph renderer
 module TauSigma.LogLog
-       ( logLogChart
-       , writeSVG
+       ( main
        ) where
 
+import Control.Monad.Trans
+import Control.Monad.Trans.Except
+
 import Data.Monoid (mempty)
+
 import Graphics.Rendering.Chart.Easy
 import Graphics.Rendering.Chart.Backend.Diagrams
+
+import Pipes
+import Pipes.ByteString (stdin)
+import qualified Pipes.Prelude as P
+
 import System.FilePath (FilePath, splitExtension)
+
+import TauSigma.CSV
 import TauSigma.Types (TauSigma(..))
+
+
+main :: MonadIO m => FilePath -> ExceptT String m (PickFn ())
+main path = do
+  points <- P.toListM (decodeByName stdin)
+  liftIO $ writeSVG path [("ADEV", points)]
 
 -- | Function to render multiple log-log plots on one chart.
 logLogChart :: [(String, [TauSigma])] -> Renderable ()
