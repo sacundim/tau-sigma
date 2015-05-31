@@ -8,7 +8,7 @@ module TauSigma.Noise
        , main
        ) where
 
-import Control.Monad (forever)
+import Control.Monad (forever, replicateM_)
 import Control.Monad.Trans (lift)
 import Control.Monad.Random (MonadRandom, Random, getRandomR)
 
@@ -43,13 +43,8 @@ instance Default OutputType where
 
 -- | The mix of noise types to generate.
 data Mix =
-  Mix {
-        -- | White phase noise level.
-        _wpm  :: Double  
-        -- | Flicker phase noise level.
-      , _fpm  :: Double
-        -- | White frequency noise level.
-      , _wfm  :: Double
+  Mix { -- | White frequency noise level.
+        _wfm  :: Double
         -- | Flicker frequency noise level.
       , _ffm  :: Double
         -- | Random walk frequency noise level.
@@ -57,9 +52,7 @@ data Mix =
       }
 
 instance Default Mix where
-  def = Mix { _wpm  = 0.0
-            , _fpm  = 0.0
-            , _wfm  = 1.0
+  def = Mix { _wfm  = 1.0
             , _ffm  = 0.0
             , _rwfm = 0.0
             }
@@ -70,15 +63,20 @@ $(makeLenses ''Mix)
 
 main :: (MonadRandom m, MonadIO m) => Options -> m ()
 main opts =
-  runEffect $ mixed (view mix opts)
+  runEffect $ mixed opts
           >-> toOutputType (view outputType opts)
           >-> P.take (view howMany opts)
           >-> P.map Only
           >-> encode
           >-> stdout
 
-mixed :: MonadRandom m => Mix -> Producer Double m ()
-mixed mix = P.zipWith (+) (white (view wfm mix)) (brown (view rwfm mix))
+-- TODO: don't pay the cost of noises at level 0.0
+mixed :: MonadRandom m => Options -> Producer Double m ()
+mixed opts = zipSum [ white (view (mix . wfm) opts)
+                    , flicker octaves (view (mix . ffm) opts)
+                    , brown (view (mix . rwfm) opts)
+                    ]
+  where octaves = floor $ logBase 2 (fromIntegral (view howMany opts))
 
 -- | Handle the output type option.
 toOutputType :: Monad m => OutputType -> Pipe Double Double m r
@@ -96,11 +94,23 @@ white n = randomR (-n, n)
 brown :: (MonadRandom m) => Double -> Producer Double m ()
 brown n = white n >-> integrate
 
-{-
-flicker :: (MonadRandom m) => Double -> Producer Double m ()
-flicker n = _
--}
+flicker :: (MonadRandom m) => Int -> Double -> Producer Double m ()
+flicker octaves n = zipSum (map go [1..(octaves+1)])
+  where go o = white n >-> hold o
+
+-- | Hold a signal for @2^octave@ ticks.  (Yes, higher number = lower
+-- octave.)
+hold :: Monad m => Int -> Pipe a a m r
+hold octave = forever $ do
+  a <- await
+  replicateM_ (2^octave) (yield a)
+
+  
 
 -- | Ranged random 'Producer'.
 randomR :: (MonadRandom m, Random a) => (a, a) -> Producer a m ()
 randomR (lo, hi) = forever (lift (getRandomR (lo, hi)) >>= yield)
+
+
+zipSum :: (Monad m, Num a) => [Producer a m ()] -> Producer a m ()
+zipSum ps = foldr1 (P.zipWith (+)) ps
