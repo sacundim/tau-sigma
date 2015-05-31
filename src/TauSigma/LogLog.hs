@@ -1,15 +1,25 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Log/log graph renderer
 module TauSigma.LogLog
-       ( main
+       ( Options
+       , options
+       , main
        ) where
 
+import Control.Applicative
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
 
+import Control.Lens
+import Control.Lens.TH
+
 import Data.Monoid (mempty)
 
-import Graphics.Rendering.Chart.Easy
+import Graphics.Rendering.Chart.Easy hiding (label)
 import Graphics.Rendering.Chart.Backend.Diagrams
+
+import Options.Applicative
 
 import Pipes
 import Pipes.ByteString (stdin)
@@ -21,10 +31,35 @@ import TauSigma.CSV
 import TauSigma.Types (TauSigma(..))
 
 
-main :: MonadIO m => FilePath -> ExceptT String m (PickFn ())
-main path = do
+data Options
+  = Options { _path :: FilePath
+            , _label :: String
+            }
+
+$(makeLenses ''Options)
+
+
+options :: Parser Options
+options = Options
+      <$> strOption
+          ( long "out"
+         <> short 'o'
+         <> metavar "PATH"
+         <> help "Path to write SVG file to"
+          )
+      <*> strOption
+          ( long "label"
+         <> short 'l'
+         <> metavar "STRING"
+         <> value "ADEV"
+         <> help "Label to use in graph legend"
+          )
+
+
+main :: MonadIO m => Options -> ExceptT String m (PickFn ())
+main opts = do
   points <- P.toListM (decodeByName stdin)
-  liftIO $ writeSVG path [("ADEV", points)]
+  liftIO $ writeSVG (view path opts) [(view label opts, points)]
 
 -- | Function to render multiple log-log plots on one chart.
 logLogChart :: [(String, [TauSigma])] -> Renderable ()

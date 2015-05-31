@@ -5,9 +5,11 @@ module TauSigma.Noise
        ( Options(..)
        , OutputType(..)
        , Mix(..)
+       , options
        , main
        ) where
 
+import Control.Applicative
 import Control.Monad (forever, replicateM_)
 import Control.Monad.Trans (lift)
 import Control.Monad.Random (MonadRandom, Random, getRandomR)
@@ -19,27 +21,54 @@ import Data.Monoid
 import Control.Lens
 import Control.Lens.TH
 
+import Options.Applicative
+
 import Pipes
 import Pipes.ByteString (stdout)
 import Pipes.Csv 
 import qualified Pipes.Prelude as P
 
-
+options :: Parser Options
+options = Options
+      <$> option auto
+          ( long "length"
+         <> short 'n'
+         <> metavar "N"
+         <> value 1000
+         <> help "Generate N data points"
+          )
+      <*> flag Phase Frequency
+          ( long "frequency"
+         <> help "Output as frequency data instead of phase"
+          )
+       <*> ( Mix
+         <$> option auto
+             ( long "wfm"
+            <> metavar "N"
+            <> value 1.0
+            <> help "White frequency noise intensity of N (default 1.0)"
+             )
+         <*> option auto
+             ( long "ffm"
+            <> metavar "N"
+            <> value 0.0
+            <> help "Flicker frequency noise intensity of N (default 0.0)"
+             )
+         <*> option auto
+             ( long "rwfm"
+            <> metavar "N"
+            <> value 0.0
+            <> help "Random walk frequency noise intensity of N (default 0.0)"
+             )
+           )
+         
 data Options =
   Options { _howMany :: Int
           , _outputType :: OutputType
           , _mix :: Mix
           }
 
-instance Default Options where
-  def = Options 1000 def def
-
-
 data OutputType = Phase | Frequency
-
-instance Default OutputType where
-  def = Phase
-
 
 -- | The mix of noise types to generate.
 data Mix =
@@ -50,12 +79,6 @@ data Mix =
         -- | Random walk frequency noise level.
       , _rwfm :: Double
       }
-
-instance Default Mix where
-  def = Mix { _wfm  = 1.0
-            , _ffm  = 0.0
-            , _rwfm = 0.0
-            }
 
 $(makeLenses ''Options)
 $(makeLenses ''Mix)

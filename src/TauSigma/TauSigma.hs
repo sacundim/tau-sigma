@@ -1,17 +1,26 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module TauSigma.TauSigma
-       ( TauSigma(..)
+       ( Options
+       , options
        , main
        ) where
+
+import Control.Applicative
 
 import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
 
+import Control.Lens (view)
+import Control.Lens.TH
+
 import Data.Csv (HasHeader(..), fromOnly, Header)
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+
+import Options.Applicative hiding (header)
 
 import Pipes
 import Pipes.ByteString (stdin, stdout)
@@ -22,10 +31,27 @@ import TauSigma.CSV
 import TauSigma.Vector
 import TauSigma.Types
 
-main :: (PrimMonad m, MonadIO m) => Tau0 -> ExceptT String m ()
-main tau0 = do
+
+data Options = Options { _tau0 :: Tau0 }
+
+$(makeLenses ''Options)
+
+options :: Parser Options
+options = Options
+      <$> option auto
+          ( long "tau0"
+         <> metavar "N"
+         <> help "Sampling interval (default 1)"
+          )
+
+
+main :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
+main opts = do
+  let 
   errors <- readVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ (each $ tauSigma tau0 errors) >-> encodeByName header >-> stdout
+  runEffect $ (each $ tauSigma (view tau0 opts) errors)
+          >-> encodeByName header
+          >-> stdout
 
 header :: Header
 header = V.fromList ["tau", "sigma"]
