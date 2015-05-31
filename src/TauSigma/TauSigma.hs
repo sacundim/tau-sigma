@@ -22,7 +22,6 @@ import TauSigma.CSV
 import TauSigma.Vector
 import TauSigma.Types
 
-
 main :: (PrimMonad m, MonadIO m) => Tau0 -> ExceptT String m ()
 main tau0 = do
   errors <- readVector (decode NoHeader stdin >-> P.map fromOnly)
