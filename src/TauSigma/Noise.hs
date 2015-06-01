@@ -81,18 +81,27 @@ data Mix =
       , _rwfm :: Maybe Double
       }
 
+instance Default Mix where
+  def = Mix (Just 1.0) Nothing Nothing
+
 $(makeLenses ''Options)
 $(makeLenses ''Mix)
 
 
+
 main :: (MonadRandom m, MonadIO m) => Options -> m ()
 main opts =
-  runEffect $ mixed opts
+  runEffect $ mixed (applyDefaults opts)
           >-> toOutputType (view outputType opts)
           >-> P.take (view howMany opts)
           >-> P.map Only
           >-> encode
           >-> stdout
+
+applyDefaults :: Options -> Options
+applyDefaults opts = over mix go opts
+  where go (Mix Nothing Nothing Nothing) = def
+        go other = other
 
 mixed :: MonadRandom m => Options -> Producer Double m ()
 mixed opts =
