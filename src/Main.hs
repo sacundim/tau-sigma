@@ -13,7 +13,7 @@ import System.Environment (getArgs)
 import System.Exit
 import System.IO (hPutStrLn, stderr)
 
-import qualified TauSigma.TauSigma as TauSigma
+import qualified TauSigma.ADEV as ADEV
 import qualified TauSigma.LogLog as LogLog
 import qualified TauSigma.Noise as Noise
 
@@ -32,7 +32,7 @@ main' opts = do
 
 
 dispatch :: Options -> ExceptT String IO ()
-dispatch (ADEV opts) = TauSigma.main opts
+dispatch (ADEV opts) = ADEV.main opts
 dispatch (LogLog opts) = LogLog.main opts >> return ()
 dispatch (Noise opts) = lift (Noise.main opts)
 
@@ -41,7 +41,7 @@ options :: Parser Options
 options =
   subparser $ mconcat
   [ command "adev"
-      (info (ADEV <$> TauSigma.options)
+      (info (ADEV <$> ADEV.options)
        (progDesc "Compute Allan deviation"))
   , command "loglog"
       (info (LogLog <$> LogLog.options)
@@ -52,6 +52,6 @@ options =
   ]
 
 data Options
-  = ADEV TauSigma.Options
+  = ADEV ADEV.Options
   | LogLog LogLog.Options
   | Noise Noise.Options

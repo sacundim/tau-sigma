@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module TauSigma.TauSigma
+module TauSigma.ADEV
        ( Options
        , options
        , main
