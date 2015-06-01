@@ -16,6 +16,7 @@ import Control.Monad.Random (MonadRandom, Random, getRandomR)
 
 import Data.Csv (Only(..))
 import Data.Default
+import Data.Maybe (catMaybes)
 import Data.Monoid
 
 import Control.Lens
@@ -42,23 +43,23 @@ options = Options
          <> help "Output as frequency data instead of phase"
           )
        <*> ( Mix
-         <$> option auto
+         <$> option (fmap Just auto)
              ( long "wfm"
             <> metavar "N"
-            <> value 1.0
-            <> help "White frequency noise intensity of N (default 1.0)"
+            <> value Nothing
+            <> help "White frequency noise intensity"
              )
-         <*> option auto
+         <*> option (fmap Just auto)
              ( long "ffm"
             <> metavar "N"
-            <> value 0.0
-            <> help "Flicker frequency noise intensity of N (default 0.0)"
+            <> value Nothing
+            <> help "Flicker frequency noise intensity"
              )
-         <*> option auto
+         <*> option (fmap Just auto)
              ( long "rwfm"
             <> metavar "N"
-            <> value 0.0
-            <> help "Random walk frequency noise intensity of N (default 0.0)"
+            <> value Nothing
+            <> help "Random walk frequency noise intensity"
              )
            )
          
@@ -73,11 +74,11 @@ data OutputType = Phase | Frequency
 -- | The mix of noise types to generate.
 data Mix =
   Mix { -- | White frequency noise level.
-        _wfm  :: Double
+        _wfm  :: Maybe Double
         -- | Flicker frequency noise level.
-      , _ffm  :: Double
+      , _ffm  :: Maybe Double
         -- | Random walk frequency noise level.
-      , _rwfm :: Double
+      , _rwfm :: Maybe Double
       }
 
 $(makeLenses ''Options)
@@ -93,14 +94,15 @@ main opts =
           >-> encode
           >-> stdout
 
--- TODO: don't pay the cost of noises at level 0.0
 mixed :: MonadRandom m => Options -> Producer Double m ()
-mixed opts = zipSum [ white (view (mix . wfm) opts)
-                    , flicker octaves (view (mix . ffm) opts)
-                    , brown (view (mix . rwfm) opts)
-                    ]
-  where octaves = floor $ logBase 2 (fromIntegral (view howMany opts))
-
+mixed opts =
+  zipSum $ catMaybes [ aux white wfm
+                     , aux (flicker octaves) ffm
+                     , aux brown rwfm
+                     ]
+  where aux f g = f <$> view (mix . g) opts
+        octaves = floor $ logBase 2 (fromIntegral (view howMany opts))
+        
 -- | Handle the output type option.
 toOutputType :: Monad m => OutputType -> Pipe Double Double m r
 toOutputType Phase = integrate
@@ -108,6 +110,15 @@ toOutputType Frequency = cat
 
 integrate :: (Monad m, Num a) => Pipe a a m r
 integrate = P.scan (+) 0 id
+
+differentiate :: (Monad m, Num a) => Pipe a a m r
+differentiate = await >>= differentiate'
+  where
+    differentiate' :: (Monad m, Num a) => a -> Pipe a a m r
+    differentiate' prev = do
+      cur <- await
+      yield (cur - prev)
+      differentiate' cur
 
 -- | White noise is just random values.
 white :: (MonadRandom m) => Double -> Producer Double m ()
