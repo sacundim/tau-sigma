@@ -67,17 +67,23 @@ linear :: MonadIO m => Options -> ExceptT String m (PickFn ())
 linear opts = do
   errors <- P.toListM (decode NoHeader stdin >-> P.map fromOnly)
   let charts = lineCharts [(view label opts, errors)]
-  liftIO $ writeSVG (view path opts) charts
+  liftIO $ writeSVG opts charts
 
-loglog :: MonadIO m => Options -> ExceptT String m ()
+loglog
+  :: MonadIO m =>
+     Options
+  -> ExceptT String m (PickFn (LayoutPick LogValue LogValue LogValue))
 loglog opts = do
   points <- P.toListM (decodeByName stdin)
-  liftIO $ writeSVG (view path opts) (logLogChart (view label opts) points)
-  return ()
+  liftIO $ writeSquareSVG opts (logLogChart (view label opts) points)
 
-writeSVG :: FilePath -> Renderable a -> IO (PickFn a)
-writeSVG path graph = renderableToFile options path graph
-  where options = FileOptions (800, 800) SVG mempty
+
+writeSVG :: Options -> Renderable a -> IO (PickFn a)
+writeSVG opts = renderableToFile def (view path opts)
+
+writeSquareSVG :: Options -> Renderable a -> IO (PickFn a)
+writeSquareSVG opts =
+  renderableToFile (set fo_size (800, 800) def) (view path opts)
 
 
 lineCharts :: [(String, [Double])] -> Renderable ()
