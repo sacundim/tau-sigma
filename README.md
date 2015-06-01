@@ -7,7 +7,8 @@ stability of clocks in terms of their
 It has the following subcommands:
 
 1. `adev`: Read a phase error series from standard input and emit
-   tau/sigma pairs to standard output as CSV.
+   tau/sigma ADEV pairs to standard output as CSV.  Uses the standard
+   overlapped Allan deviation estimator.
 2. `loglog`: Generate a tau/sigma log-log chart from the output of
    `adev`.
 3. `chart`: Generate a linear chart from time series data.  Meant for
@@ -38,6 +39,9 @@ TODO
 * Smart scaling of log/log chart axes.  We need same-sized decades in
   both axes.
 * Generate charts in other formats than SVG.
+* Frequency spectra
+* Phase noises
+* Other stability statistics
 
 
 References
