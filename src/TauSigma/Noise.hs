@@ -117,8 +117,10 @@ white n = randomR (-n, n)
 brown :: (MonadRandom m) => Double -> Producer Double m ()
 brown n = white n >-> integrate
 
+-- | Flicker noise has 1/f power density, i.e., inversely proportional
+-- to the frequency.  
 flicker :: (MonadRandom m) => Int -> Double -> Producer Double m ()
-flicker octaves n = zipSum (map go [1..(octaves+1)])
+flicker octaves n = zipSum (map go [0..octaves])
   where go o = white n >-> hold o
 
 -- | Hold a signal for @2^octave@ ticks.  (Yes, higher number = lower
