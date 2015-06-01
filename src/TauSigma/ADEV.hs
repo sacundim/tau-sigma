@@ -17,6 +17,7 @@ import Control.Lens (view)
 import Control.Lens.TH
 
 import Data.Csv (HasHeader(..), fromOnly, Header)
+import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 
@@ -32,7 +33,10 @@ import TauSigma.Vector
 import TauSigma.Types
 
 
-data Options = Options { _tau0 :: Tau0 }
+data Options
+  = Options { _tau0 :: Tau0
+            , _maxTau :: Maybe Int
+            }
 
 $(makeLenses ''Options)
 
@@ -41,22 +45,26 @@ options = Options
       <$> option auto
           ( long "tau0"
          <> metavar "N"
-         <> help "Sampling interval (default 1)"
+         <> help "Base sampling interval (default 1)"
+          )
+      <*> option (fmap Just auto)
+          ( long "max-tau"
+         <> metavar "N"
+         <> value Nothing
+         <> help "Maximum multiple of sampling intervals to output."
           )
 
 
 main :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
 main opts = do
-  let 
   errors <- readVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ (each $ tauSigma (view tau0 opts) errors)
-          >-> encodeByName header
+  runEffect $ (each $ tauSigma opts errors)
+          >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
 
-header :: Header
-header = V.fromList ["tau", "sigma"]
-
-tauSigma :: Tau0 -> U.Vector Double -> [TauSigma]
-tauSigma tau0 xs = map toTauSigma (adevs tau0 xs)
+tauSigma :: Options -> U.Vector Double -> [TauSigma]
+tauSigma opts xs = map toTauSigma (takeWhile below (adevs (view tau0 opts) xs))
   where toTauSigma (tau, sigma) = TauSigma tau sigma
-
+        below (tau, _) = tau <= max
+        max = fromMaybe def (view maxTau opts)
+          where def = U.length xs - 1 `div` 5
