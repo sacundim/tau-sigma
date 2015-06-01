@@ -63,8 +63,11 @@ main opts = do
           >-> stdout
 
 tauSigma :: Options -> U.Vector Double -> [TauSigma]
-tauSigma opts xs = map toTauSigma (takeWhile below (adevs (view tau0 opts) xs))
-  where toTauSigma (tau, sigma) = TauSigma tau sigma
-        below (tau, _) = tau <= max
-        max = fromMaybe def (view maxTau opts)
-          where def = U.length xs - 1 `div` 5
+tauSigma opts xs = map toTauSigma truncated
+  where
+    -- Note: the `TauSigma` constructor is strict in all its fields
+    toTauSigma (tau, sigma) = TauSigma tau sigma
+    truncated = takeWhile below (adevs (view tau0 opts) xs)
+      where below (tau, _) = tau <= max
+            max = fromMaybe def (view maxTau opts)
+              where def = (U.length xs - 1) `div` 5
