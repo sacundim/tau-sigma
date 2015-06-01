@@ -14,7 +14,7 @@ import System.Exit
 import System.IO (hPutStrLn, stderr)
 
 import qualified TauSigma.ADEV as ADEV
-import qualified TauSigma.LogLog as LogLog
+import qualified TauSigma.Chart as Chart
 import qualified TauSigma.Noise as Noise
 
 
@@ -33,7 +33,8 @@ main' opts = do
 
 dispatch :: Options -> ExceptT String IO ()
 dispatch (ADEV opts) = ADEV.main opts
-dispatch (LogLog opts) = LogLog.main opts >> return ()
+dispatch (LogLog opts) = Chart.loglog opts >> return ()
+dispatch (Chart opts) = Chart.linear opts >> return ()
 dispatch (Noise opts) = lift (Noise.main opts)
 
 
@@ -44,14 +45,18 @@ options =
       (info (ADEV <$> ADEV.options)
        (progDesc "Compute Allan deviation"))
   , command "loglog"
-      (info (LogLog <$> LogLog.options)
+      (info (LogLog <$> Chart.options)
        (progDesc "Make a log/log tau/sigma graph"))
+  , command "chart"
+      (info (Chart <$> Chart.options)
+       (progDesc "Make a linear graph"))
   , command "noise"
       (info (Noise <$> Noise.options)
        (progDesc "Generate spectral noises"))
   ]
 
 data Options
-  = ADEV ADEV.Options
-  | LogLog LogLog.Options
-  | Noise Noise.Options
+  = ADEV   ADEV.Options
+  | LogLog Chart.Options
+  | Chart  Chart.Options
+  | Noise  Noise.Options
