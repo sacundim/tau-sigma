@@ -1,4 +1,4 @@
-module TauSigma.Util
+module TauSigma.Util.Pipes
        ( fromConsumer
        , fromProducer
        , toPipe

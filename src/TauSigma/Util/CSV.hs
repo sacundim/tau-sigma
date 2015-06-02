@@ -1,5 +1,5 @@
 -- | Friendlier wrappers around "Pipes.Csv".
-module TauSigma.CSV
+module TauSigma.Util.CSV
        ( decode
        , decodeWith
        , decodeByName

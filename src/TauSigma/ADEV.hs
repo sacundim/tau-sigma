@@ -27,10 +27,10 @@ import Pipes
 import Pipes.ByteString (stdin, stdout)
 import qualified Pipes.Prelude as P
 
-import TauSigma.Allan
-import TauSigma.CSV
-import TauSigma.Vector
 import TauSigma.Types
+import TauSigma.Util.Allan
+import TauSigma.Util.CSV
+import TauSigma.Util.Vector
 
 
 data Options

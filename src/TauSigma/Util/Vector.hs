@@ -1,5 +1,5 @@
 -- | Friendlier wrappers around "Pipes.Vector".
-module TauSigma.Vector
+module TauSigma.Util.Vector
        ( readVector
        , consumeVector
        ) where

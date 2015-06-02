@@ -32,8 +32,8 @@ import qualified Pipes.Prelude as P
 
 import System.FilePath (FilePath, splitExtension)
 
-import TauSigma.CSV
 import TauSigma.Types (TauSigma(..))
+import TauSigma.Util.CSV
 
 import Text.Printf
 

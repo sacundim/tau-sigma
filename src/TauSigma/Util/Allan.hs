@@ -4,7 +4,7 @@
 --
 -- See: http://tf.nist.gov/general/pdf/2220.pdf
 --
-module TauSigma.Allan
+module TauSigma.Util.Allan
        ( Tau0
        , integrate
        , differences
