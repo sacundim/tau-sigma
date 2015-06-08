@@ -15,10 +15,8 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Except
 
 import Data.ByteString (ByteString)
-import Data.Either
 
 import Pipes
-import Pipes.ByteString (stdin)
 import Pipes.Csv hiding (decode, decodeWith, decodeByName, decodeByNameWith)
 import qualified Pipes.Csv as C
 

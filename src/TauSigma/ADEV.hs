@@ -16,7 +16,7 @@ import Control.Monad.Trans.Except
 import Control.Lens (view)
 import Control.Lens.TH
 
-import Data.Csv (HasHeader(..), fromOnly, Header)
+import Data.Csv (HasHeader(..), fromOnly)
 import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U

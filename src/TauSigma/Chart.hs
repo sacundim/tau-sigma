@@ -9,14 +9,11 @@ module TauSigma.Chart
        ) where
 
 import Control.Applicative
+import Control.Lens
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
 
-import Control.Lens
-import Control.Lens.TH
-
 import Data.Csv (HasHeader(..), fromOnly)
-import Data.Monoid (mempty)
 import Data.Ord (comparing)
 import Data.List(minimumBy)
 
@@ -29,8 +26,6 @@ import Options.Applicative
 import Pipes
 import Pipes.ByteString (stdin)
 import qualified Pipes.Prelude as P
-
-import System.FilePath (FilePath, splitExtension)
 
 import TauSigma.Types (TauSigma(..))
 import TauSigma.Util.CSV
@@ -126,7 +121,7 @@ exponentialAxis = LogAxisParams (\(LogValue a) -> printf "%0.1e" a)
 -- | Truncate a value to the largest power of 10 that's less than or
 -- equal to it.
 magnitude :: (Floating a, RealFrac a) => a -> a
-magnitude a = 10^^(floor (log10 a))
+magnitude a = 10^^(floor (log10 a) :: Int)
 
 magnitudeH :: (Floating a, RealFrac a) => a -> a
 magnitudeH a = let m = magnitude a

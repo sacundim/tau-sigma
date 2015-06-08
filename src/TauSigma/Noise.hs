@@ -10,17 +10,14 @@ module TauSigma.Noise
        ) where
 
 import Control.Applicative
+import Control.Lens
 import Control.Monad (forever, replicateM_)
-import Control.Monad.Trans (lift)
 import Control.Monad.Random (MonadRandom, Random, getRandomR)
 
 import Data.Csv (Only(..))
 import Data.Default
 import Data.Maybe (catMaybes)
 import Data.Monoid
-
-import Control.Lens
-import Control.Lens.TH
 
 import Options.Applicative
 

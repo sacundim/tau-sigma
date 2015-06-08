@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, OverloadedStrings #-}
 
 -- | Allan Variance and other related frequency stability statistics.
 --
@@ -15,11 +14,8 @@ module TauSigma.Util.Allan
        , adevs
        ) where
 
-import qualified Data.ByteString.Char8 as BS
-import           Data.Csv (ToField(..))
-import           Data.Monoid ((<>))
 import qualified Data.Vector.Fusion.Stream as Stream
-import           Data.Vector.Generic (Vector, (!))
+import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
 
@@ -38,12 +34,8 @@ differences :: (Num a, Vector v a) => v a -> v a
 differences xs | V.null xs = V.empty
 differences xs = V.zipWith (+) (V.map negate xs) (V.tail xs)
 
--- | Resample a sequence of time errors at whole number intervals.
-resample :: Vector v a => Int -> v a -> v a
-resample n = V.ifilter (\i _ -> i `mod` n == 0)
 
-
-avar :: forall v a. (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+avar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 avar tau0 m xs = sumsq / fromIntegral divisor
   where divisor = 2 * m^2 * tau0^2 * (V.length xs - 2*m)
         sumsq = sumGen (V.length xs - 2*m) step

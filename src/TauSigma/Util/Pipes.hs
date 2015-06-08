@@ -4,11 +4,8 @@ module TauSigma.Util.Pipes
        , toPipe
        ) where
 
-import Control.Monad
-
 import Pipes
 import Pipes.Core
-import qualified Pipes.Prelude as P
 
 
 -- | Turn a 'Consumer' into a 'Pipe' that consumes the same input and
