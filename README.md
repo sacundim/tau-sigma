@@ -1,5 +1,4 @@
-`tau-sigma`: A Simple Utility for Frequency Stability Analysis
-==============================================================
+# `tau-sigma`: A Simple Utility for Frequency Stability Analysis
 
 This is a simple command-line utilty for analyzing the frequency
 stability of clocks in terms of their
@@ -20,18 +19,39 @@ It has the following subcommands:
 This tool has so far been written primarily with simplicity in mind,
 not performance.
 
-Example usages:
 
-    tau-sigma noise --wfm 1.0 --ffm 0.25 --rwfm 0.1 \
-        | tau-sigma adev --tau0 86400 \
-        | tau-sigma loglog --out mixed_ADEV.svg
+## Examples
 
-    tau-sigma noise --wfm 0.0 --ffm 1.0 --rwfm 0.1 --frequency \
-        | tau-sigma chart --out mixed_frequencies.svg
+These examples are scripted in [`script/examples.sh`](script/examples.sh).
 
 
-TODO
-----
+### Time Domain
+
+* [White phase modulation](images/wpm_phase.svg)
+* [Flicker phase modulation](images/fpm_phase.svg)
+* [White frequency modulation](images/wfm_phase.svg)
+* [Flicker frequency modulation](images/ffm_phase.svg)
+* [Random walk frequency modulation](images/rwfm_frequency.svg)
+
+
+### Frequency Domain
+
+* [White phase modulation](images/wpm_frequency.svg)
+* [Flicker phase modulation](images/fpm_frequency.svg)
+* [White frequency modulation](images/wfm_frequency.svg)
+* [Flicker frequency modulation](images/ffm_frequency.svg)
+* [Random walk frequency modulation](images/rwfm_frequency.svg)
+
+
+### Allan deviation
+
+* [White phase modulation](images/wpm_adev.svg)
+* [White frequency modulation](images/wfm_adev.svg)
+* [Flicker frequency modulation](images/ffm_adev.svg)
+* [Random walk frequency modulation](images/rwfm_adev.svg)
+
+
+## TODO
 
 * Unit test!
 * Error bars!
@@ -45,8 +65,7 @@ TODO
 * Other stability statistics
 
 
-References
-----------
+## References
 
 * Riley, William and David A. Howe.  2008.
   [*Handbook of Frequency Stability Analysis*](http://tf.nist.gov/general/pdf/2220.pdf).
