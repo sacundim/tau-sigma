@@ -14,6 +14,8 @@ module TauSigma.Util.Allan
        , adevs
        ) where
 
+import Data.IntMap.Lazy (IntMap)
+import qualified Data.IntMap.Lazy as IntMap
 import qualified Data.Vector.Fusion.Stream as Stream
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
@@ -44,14 +46,13 @@ avar tau0 m xs = sumsq / fromIntegral divisor
 adev :: (Floating a, Vector v a) => Tau0-> Int -> v a -> a
 adev tau0 m xs = sqrt (avar tau0 m xs)
 
-avars :: (RealFrac a, Vector v a) => Tau0 -> v a -> [(Int, a)]
-avars tau0 xs = map step [1..maxTaus]
+avars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+avars tau0 xs = IntMap.fromList (map step [1..maxTaus])
   where step m = (m, avar tau0 m xs)
         maxTaus = (V.length xs - 1) `div` 2
                     
-adevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> [(Int, a)]
-adevs tau0 xs = map step (avars tau0 xs)
-  where step (m, s) = (m, sqrt s)
+adevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+adevs tau0 xs = IntMap.map sqrt (avars tau0 xs)
 
 
 -- Auxiliary functions

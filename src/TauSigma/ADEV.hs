@@ -17,6 +17,8 @@ import Control.Lens (view)
 import Control.Lens.TH
 
 import Data.Csv (HasHeader(..), fromOnly)
+import Data.IntMap.Lazy (IntMap)
+import qualified Data.IntMap.Lazy as IntMap
 import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
@@ -67,7 +69,7 @@ tauSigma opts xs = map toTauSigma truncated
   where
     -- Note: the `TauSigma` constructor is strict in all its fields
     toTauSigma (tau, sigma) = TauSigma tau sigma
-    truncated = takeWhile below (adevs (view tau0 opts) xs)
+    truncated = takeWhile below (IntMap.toAscList (adevs (view tau0 opts) xs))
       where below (tau, _) = tau <= max
             max = fromMaybe def (view maxTau opts)
               where def = (U.length xs - 1) `div` 5
