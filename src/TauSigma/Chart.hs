@@ -53,7 +53,7 @@ options = Options
           ( long "label"
          <> short 'l'
          <> metavar "STRING"
-         <> value "ADEV"
+         <> value "value"
          <> help "Label to use in graph legend"
           )
 
