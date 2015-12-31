@@ -15,10 +15,21 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Except
 
 import Data.ByteString (ByteString)
+import Data.Tagged
 
 import Pipes
 import Pipes.Csv hiding (decode, decodeWith, decodeByName, decodeByNameWith)
 import qualified Pipes.Csv as C
+
+
+instance FromField a => FromField (Tagged b a) where
+  parseField = fmap Tagged . parseField
+
+instance FromRecord a => FromRecord (Tagged b a) where
+  parseRecord = fmap Tagged . parseRecord
+
+instance ToField a => ToField (Tagged b a) where
+  toField = toField . unTagged
 
 decode
   :: (Monad m, FromRecord a) =>

@@ -3,7 +3,7 @@
 -- | Random noise generator supporting various spectral distributions
 module TauSigma.Noise
        ( Options(..)
-       , OutputType(..)
+       , Domain(..)
        , Mix(..)
        , options
        , main
@@ -27,6 +27,7 @@ import Pipes.Csv
 import qualified Pipes.Prelude as P
 
 import TauSigma.Types
+import TauSigma.Util.Pipes (toFrequency, integrate, toPhase)
 
 options :: Parser Options
 options = Options
@@ -37,7 +38,7 @@ options = Options
          <> value 1000
          <> help "Generate N data points"
           )
-      <*> flag Phase Freq
+      <*> flag Phase Frequency
           ( long "frequency"
          <> help "Output as frequency data instead of phase"
           )
@@ -76,11 +77,9 @@ options = Options
          
 data Options =
   Options { _howMany :: Int
-          , _outputType :: OutputType
+          , _outputType :: Domain
           , _mix :: Mix
           }
-
-data OutputType = Phase | Freq
 
 -- | The mix of noise types to generate.
 data Mix =
@@ -119,12 +118,12 @@ applyDefaults opts = over mix go opts
         go other = other
 
 --- | Handle the output type option.
-toOutputType :: Monad m => OutputType -> Pipe (Time Double) Double m r
-toOutputType Phase = P.map getTime
-toOutputType Freq = toFrequency >-> P.map getFrequency
+toOutputType :: Monad m => Domain -> Pipe (TimeData Double) Double m r
+toOutputType Phase = P.map unTagged
+toOutputType Frequency = toFrequency >-> P.map unTagged
 
 
-mixed :: MonadRandom m => Options -> Producer (Time Double) m ()
+mixed :: MonadRandom m => Options -> Producer (TimeData Double) m ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
                      , auxT (flickerPhase octaves) fpm
@@ -136,22 +135,24 @@ mixed opts =
         auxF f g = fmap (>-> toPhase) (auxT f g)
         octaves = floor $ logBase 2 (fromIntegral (view howMany opts))
         
-whitePhase :: MonadRandom m => Double -> Producer (Time Double) m ()
-whitePhase n = white n >-> P.map Time
+whitePhase :: MonadRandom m => Double -> Producer (TimeData Double) m ()
+whitePhase n = white n >-> P.map Tagged
 
-flickerPhase :: MonadRandom m => Int -> Double -> Producer (Time Double) m ()
-flickerPhase octaves n = flicker octaves n >-> P.map Time
+flickerPhase
+  :: MonadRandom m =>
+     Int -> Double -> Producer (TimeData Double) m ()
+flickerPhase octaves n = flicker octaves n >-> P.map Tagged
 
-whiteFrequency :: MonadRandom m => Double -> Producer (Frequency Double) m ()
-whiteFrequency n = white n >-> P.map Frequency
+whiteFrequency :: MonadRandom m => Double -> Producer (FreqData Double) m ()
+whiteFrequency n = white n >-> P.map Tagged
 
 flickerFrequency
-  :: MonadRandom m => Int -> Double -> Producer (Frequency Double) m ()
-flickerFrequency octaves n = flicker octaves n >-> P.map Frequency
+  :: MonadRandom m => Int -> Double -> Producer (FreqData Double) m ()
+flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 
 randomWalkFrequency
-  :: MonadRandom m => Double -> Producer (Frequency Double) m ()
-randomWalkFrequency n = brown n >-> P.map Frequency
+  :: MonadRandom m => Double -> Producer (FreqData Double) m ()
+randomWalkFrequency n = brown n >-> P.map Tagged
 
 
 -- | White noise is just random values.
@@ -174,26 +175,6 @@ hold :: Monad m => Int -> Pipe a a m r
 hold octave = forever $ do
   a <- await
   replicateM_ (2^octave) (yield a)
-
-
-toPhase :: (Monad m, Num a) => Pipe (Frequency a) (Time a) m r
-toPhase = P.map getFrequency >-> integrate >-> P.map Time
-
-integrate :: (Monad m, Num a) => Pipe a a m r
-integrate = P.scan (+) 0 id
-
-toFrequency :: (Monad m, Num a) => Pipe (Time a) (Frequency a) m r
-toFrequency = P.map getTime >-> differentiate >-> P.map Frequency
-
-differentiate :: (Monad m, Num a) => Pipe a a m r
-differentiate = await >>= differentiate'
-  where
-    differentiate' :: (Monad m, Num a) => a -> Pipe a a m r
-    differentiate' prev = do
-      cur <- await
-      yield (cur - prev)
-      differentiate' cur
-
 
 
 -- | Ranged random 'Producer'.

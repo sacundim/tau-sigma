@@ -15,6 +15,7 @@ import System.IO (hPutStrLn, stderr)
 
 import qualified TauSigma.ADEV as ADEV
 import qualified TauSigma.Chart as Chart
+import qualified TauSigma.Convert as Convert
 import qualified TauSigma.Noise as Noise
 
 
@@ -35,6 +36,7 @@ dispatch :: Options -> ExceptT String IO ()
 dispatch (ADEV opts) = ADEV.main opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
 dispatch (Chart opts) = Chart.linear opts >> return ()
+dispatch (Convert opts) = Convert.main opts
 dispatch (Noise opts) = lift (Noise.main opts)
 
 
@@ -50,13 +52,17 @@ options =
   , command "chart"
       (info (Chart <$> Chart.options)
        (progDesc "Make a linear graph"))
+  , command "convert"
+      (info (Convert <$> Convert.options)
+       (progDesc "Make a linear graph"))
   , command "noise"
       (info (Noise <$> Noise.options)
        (progDesc "Generate spectral noises"))
   ]
 
 data Options
-  = ADEV   ADEV.Options
-  | LogLog Chart.Options
-  | Chart  Chart.Options
-  | Noise  Noise.Options
+  = ADEV    ADEV.Options
+  | LogLog  Chart.Options
+  | Chart   Chart.Options
+  | Convert Convert.Options
+  | Noise   Noise.Options

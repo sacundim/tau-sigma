@@ -18,6 +18,7 @@ library
 
   exposed-modules:     TauSigma.ADEV
                      , TauSigma.Chart
+                     , TauSigma.Convert
                      , TauSigma.Noise
                      , TauSigma.Types
                      , TauSigma.Util.Allan
@@ -42,6 +43,7 @@ library
                      , pipes-vector >= 0.6.1 && < 0.7
                      , primitive >= 0.6 && < 0.7
                      , random >= 1.0.1.1 && < 1.1
+                     , tagged >= 0.8.0.1 && < 0.9
                      , transformers >= 0.4.3.0 && < 0.5
                      , vector >= 0.10.12.3 && <0.11
 

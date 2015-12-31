@@ -1,51 +1,30 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
 
 -- | Types shared by many modules in this application.
 module TauSigma.Types
-       ( Time(..)
-       , Frequency(..)
+       ( Domain(..)
+       , TimeData
+       , FreqData
+       , Tagged(..)
        , TauSigma(..)
        ) where
 
 import Control.Applicative
 import Data.Csv
+import Data.Tagged
 import qualified Data.Vector.Generic as G
 
+data Domain = Phase | Frequency deriving Read
 
--- | A newtype to represent time domain data values, to avoid mixing
+-- | A tagged type to represent time domain data values, to avoid mixing
 -- them up with frequency domain data.
-newtype Time a =
-  Time { getTime :: a }
-  deriving ( Eq
-           , Ord
-           , Show
-           , Num
-           , Fractional
-           , Real
-           , RealFloat
-           , RealFrac
-           , Floating
-           , FromField
-           , ToField
-           )
+type TimeData = Tagged Phase
 
 -- | A newtype to represent frequency domain data values, to avoid
 -- mixing them up with time domain data.
-newtype Frequency a =
-  Frequency { getFrequency :: a }
-  deriving ( Eq
-           , Ord
-           , Show
-           , Num
-           , Fractional
-           , Real
-           , RealFloat
-           , RealFrac
-           , Floating
-           , FromField
-           , ToField
-           )
+type FreqData = Tagged Frequency
 
 
 
