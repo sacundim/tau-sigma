@@ -83,9 +83,11 @@ main (Options from to) =
 -- | Convert raw input data from the given unit to fractional phase data.
 normalize :: Monad m => Unit -> Pipe Double (TimeData Double) m r
 normalize (Unit Phase tau0) = P.map (Tagged . (/tau0))
-normalize (Unit Frequency tau0) = differentiate >-> normalize (Unit Phase tau0) 
+normalize (Unit Frequency tau0) =
+  integrate >-> normalize (Unit Phase tau0) 
 
 -- | Convert fractional phase data to raw output data in the given unit.
 denormalize :: Monad m => Unit -> Pipe (TimeData Double) Double m r
 denormalize (Unit Phase tau0) = P.map ((*tau0) . unTagged)
-denormalize (Unit Frequency tau0) = denormalize (Unit Phase tau0) >-> integrate
+denormalize (Unit Frequency tau0) =
+  denormalize (Unit Phase tau0) >-> differentiate
