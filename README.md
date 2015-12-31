@@ -15,6 +15,7 @@ It has the following subcommands:
    plotting time or frequency error series.
 4. `noise`: A random spectral noise generator for white, flicker and
    random walk frequency noise types, and mixes thereof.
+5. `convert`: Conversion between phase/frequency data series and units.
 
 This tool has so far been written primarily with simplicity in mind,
 not performance.
