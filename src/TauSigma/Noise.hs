@@ -36,7 +36,7 @@ options = Options
          <> short 'n'
          <> metavar "N"
          <> value 1000
-         <> help "Generate N data points"
+         <> help "Generate N data points. Default: 1000"
           )
       <*> flag Phase Frequency
           ( long "frequency"
