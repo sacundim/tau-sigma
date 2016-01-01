@@ -84,7 +84,7 @@ Benchmark bench
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      bench
   Ghc-Options:         -Wall
-  Main-Is:             Main.hs
+  Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , containers
                      , criterion
