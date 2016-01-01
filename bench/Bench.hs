@@ -6,19 +6,14 @@ module Main (main) where
 import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
-import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 
 import qualified Data.Vector as V
-import Data.Vector.Generic (Vector)
-import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 
 import Pipes
-import qualified Pipes.Prelude as P
-import Pipes.Vector
 
 import System.Random.MWC.Monad (runWithCreate)
 
@@ -33,7 +28,7 @@ main = defaultMain
   , adevTests
   ]
 
-
+noiseTests :: Benchmark
 noiseTests = bgroup "noise" subgroups
   where
     sizes = [50, 500, 5000]
@@ -42,40 +37,40 @@ noiseTests = bgroup "noise" subgroups
                 , bgroup "flicker" (map benchFlicker sizes)
                 ]
 
+benchWhite, benchBrown, benchFlicker :: Int -> Benchmark
 benchWhite = benchNoise (white 1.0)
 benchBrown = benchNoise (brown 1.0)
 benchFlicker size = benchNoise (flicker octaves 1.0) size
   where octaves = floor (logBase 2 (fromIntegral size)) + 1
 
-benchNoise noise size = bench (show size) $ nfIO (makeUnboxedNoise noise size)
+benchNoise :: Producer Double (Rand IO) () -> Int -> Benchmark
+benchNoise noise size =
+  bench (show size) $ nfIO (runWithCreate $ makeUnboxedNoise size noise)
 
+adevTests :: Benchmark
 adevTests = bgroup "adev"
             [ bgroup "unboxed" (map (unboxed (white 1.0)) sizes)
             , bgroup "boxed" (map (boxed (white 1.0)) sizes)
             ]
   where sizes = [50, 500, 5000]
         unboxed source size =
-          env (makeUnboxedNoise source size) $ \input -> 
+          env (runWithCreate $ makeUnboxedNoise size source) $ \input -> 
               bench (show size) $ nf (adevs 1) input
         boxed source size =
-          env (makeBoxedNoise source size) $ \input -> 
+          env (runWithCreate $ makeBoxedNoise size source) $ \input -> 
               bench (show size) $ nf (adevs 1) input
 
 
+-- NOTE: This always uses the same random seed.
 makeBoxedNoise
-  :: (MonadPrim m) =>
-     Producer Double (Rand m) () -> Int -> m (V.Vector Double)
-makeBoxedNoise = makeGenericNoise
+  :: PrimMonad m =>
+     Int -> Producer Double (Rand m) () -> Rand m (V.Vector Double)
+makeBoxedNoise n = takeVector n
 
 
+-- NOTE: This always uses the same random seed.
 makeUnboxedNoise
-  :: (MonadPrim m) =>
-     Producer Double (Rand m) () -> Int -> m (V.Vector Double)
-makeUnboxedNoise = makeGenericNoise
+  :: PrimMonad m =>
+     Int -> Producer Double (Rand m) () -> Rand m (V.Vector Double)
+makeUnboxedNoise n = takeVector n
 
-
-makeGenericNoise
-  :: (MonadPrim m, Vector v Double) =>
-     Producer Double (Rand m) () -> Int -> m (v Double)
-makeGenericNoise source size =
-  runWithCreate $ fmap G.fromList $ P.toListM $ (source >-> P.take size) 

@@ -7,8 +7,6 @@ module TauSigma.ADEV
        , main
        ) where
 
-import Control.Applicative
-
 import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
@@ -59,7 +57,7 @@ options = Options
 
 main :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
 main opts = do
-  errors <- readVector (decode NoHeader stdin >-> P.map fromOnly)
+  errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
   runEffect $ (each $ tauSigma opts errors)
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
