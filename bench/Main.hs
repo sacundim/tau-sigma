@@ -6,7 +6,7 @@ module Main (main) where
 import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
-import Control.Monad.Primitive.Class (MonadPrim, BasePrimMonad)
+import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
@@ -62,12 +62,12 @@ adevTests = bgroup "adev"
 
 
 makeNoise
-  :: (PrimMonad m, MonadPrim m, BasePrimMonad m ~ IO) =>
+  :: (PrimMonad m, MonadPrim m) =>
      Producer Double (Rand m) () -> Int -> m (U.Vector Double)
 makeNoise source size = readVector (hoistRand source >-> P.take size) 
 
 makeBoxedNoise
-  :: (PrimMonad m, MonadPrim m, BasePrimMonad m ~ IO) =>
+  :: (PrimMonad m, MonadPrim m) =>
      Producer Double (Rand m) () -> Int -> m (V.Vector Double)
 makeBoxedNoise source size = readVector (hoistRand source >-> P.take size) 
 
