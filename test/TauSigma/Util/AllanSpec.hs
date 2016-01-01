@@ -3,7 +3,6 @@
 module TauSigma.Util.AllanSpec where
 
 import Control.Monad.Primitive (PrimMonad)
-import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap

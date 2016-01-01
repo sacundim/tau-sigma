@@ -74,7 +74,6 @@ Test-Suite spec
                      , hspec
                      , mwc-random
                      , mwc-random-monad
-                     , monad-primitive
                      , pipes 
                      , primitive
                      , tau-sigma 
@@ -91,7 +90,6 @@ Benchmark bench
                      , criterion
                      , mwc-random
                      , mwc-random-monad
-                     , monad-primitive
                      , pipes
                      , primitive
                      , tau-sigma 
