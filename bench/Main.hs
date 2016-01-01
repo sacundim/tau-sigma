@@ -12,7 +12,7 @@ import Data.Vector.Unboxed (Vector, Unbox)
 import qualified Data.Vector.Unboxed as V
 
 import Pipes
-import Pipes.Prelude as P
+import qualified Pipes.Prelude as P
 import Pipes.Vector
 
 import TauSigma.Util.Allan
@@ -21,15 +21,33 @@ import TauSigma.Util.Vector
 
 
 main :: IO ()
-main = do
-  white <- whiteNoise 1000
-  defaultMain
-       [ bgroup "adev"
-         [ bench "wfm" $ nf (adevs 1) white
-         ]
-       ]
+main = defaultMain
+  [ noiseTests
+  , adevTests
+  ]
 
+makeNoise
+  :: (MonadRandom m, PrimMonad m) =>
+     Producer Double m () -> Int -> m (Vector Double)
+makeNoise source size = readVector (source >-> P.take size) 
 
-whiteNoise :: (MonadRandom m, PrimMonad m) => Int -> m (Vector Double)
-whiteNoise size = readVector (white 1.0 >-> P.take size) 
-    
+noiseTests = bgroup "noise" subgroups
+  where
+    sizes = [50, 500, 5000]
+    subgroups = [ bgroup "white"   (map benchWhite sizes)
+                , bgroup "brown"   (map benchBrown sizes)
+                , bgroup "flicker" (map benchFlicker sizes)
+                ]
+
+benchWhite = benchNoise (white 1.0)
+benchBrown = benchNoise (brown 1.0)
+benchFlicker size = benchNoise (flicker octaves 1.0) size
+  where octaves = floor (logBase 2 (fromIntegral size)) + 1
+
+benchNoise noise size = bench (show size) $ nfIO (makeNoise noise size)
+
+adevTests = bgroup "adev" (map (go (white 1.0)) sizes)
+  where sizes = [50, 500, 5000]
+        go source size =
+          env (makeNoise source size) $ \input -> 
+              bench (show size) $ nf (adevs 1) input
