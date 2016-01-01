@@ -3,7 +3,6 @@ module TauSigma.Util.Pipes.Noise
     ( white
     , brown
     , flicker
-    , uniformR
     , hold
     , zipSum
     , integrate
@@ -31,16 +30,16 @@ import Data.Tagged
 import Pipes
 import qualified Pipes.Prelude as P
 
-import System.Random.MWC (Variate)
 import System.Random.MWC.Monad (Rand)
 import qualified System.Random.MWC.Monad as Random
+import qualified System.Random.MWC.Distributions.Monad as Dist
 
 import TauSigma.Types
 
 
--- | White noise is just random values.
+-- | White noise is normally distributed with a standard deviation of @n@.
 white :: MonadPrim m => Double -> Producer Double (Rand m) ()
-white n = uniformR (-n, n)
+white n = forever (lift (Dist.normal 0.0 n) >>= yield)
 
 -- | Brown noise is integrated white noise.
 brown :: MonadPrim m => Double -> Producer Double (Rand m) ()
@@ -58,11 +57,6 @@ hold :: Monad m => Int -> Pipe a a m r
 hold octave = forever $ do
   a <- await
   replicateM_ (2^octave) (yield a)
-
-
--- | Ranged random 'Producer'.
-uniformR :: (MonadPrim m, Variate a) => (a, a) -> Producer a (Rand m) ()
-uniformR (lo, hi) = forever (lift (Random.uniformR (lo, hi)) >>= yield)
 
 
 -- | Zip the given pipes, adding their outputs.

@@ -71,8 +71,14 @@ Test-Suite spec
   Ghc-Options:         -Wall
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
+                     , containers
                      , hspec
-                     , QuickCheck
+                     , mwc-random
+                     , mwc-random-monad
+                     , monad-primitive
+                     , pipes 
+                     , pipes-vector
+                     , primitive
                      , tau-sigma 
                      , vector
 
