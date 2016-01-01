@@ -45,7 +45,6 @@ library
                      , pipes 
                      , pipes-bytestring
                      , pipes-csv
-                     , pipes-vector
                      , primitive
                      , random
                      , tagged
@@ -77,7 +76,6 @@ Test-Suite spec
                      , mwc-random-monad
                      , monad-primitive
                      , pipes 
-                     , pipes-vector
                      , primitive
                      , tau-sigma 
                      , vector
@@ -95,7 +93,6 @@ Benchmark bench
                      , mwc-random-monad
                      , monad-primitive
                      , pipes
-                     , pipes-vector
                      , primitive
                      , tau-sigma 
                      , vector

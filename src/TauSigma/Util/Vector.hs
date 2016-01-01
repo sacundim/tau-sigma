@@ -1,20 +1,39 @@
--- | Friendlier wrappers around "Pipes.Vector".
+-- | Utilities for working with 'Vector's.  Mostly generation from pipes.
 module TauSigma.Util.Vector
        ( readVector
-       , consumeVector
+       , readMVector
+       , readMStream
        ) where
        
-import Control.Monad.Primitive (PrimMonad)
+import Control.Monad.Primitive (PrimMonad, PrimState)
 
-import Data.Vector.Generic (Vector)
+import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Generic.Mutable as M
+import Data.Vector.Fusion.Stream.Monadic (Stream(..), Step(..))
+import Data.Vector.Fusion.Stream.Size (Size(..))
 
-import Pipes
-import Pipes.Vector
+import Pipes (Producer, next)
 
 
-readVector :: (PrimMonad m, Vector v a) => Producer a m () -> m (v a)
-readVector prod = fromProducer (hoist lift prod)
+-- | Construct a vector from a 'Producer'.  The producer will be
+-- drained.
+readVector :: (PrimMonad m, G.Vector v a) => Producer a m () -> m (v a)
+readVector producer = readMVector producer >>= G.freeze
 
-consumeVector :: (PrimMonad m, Vector v a) => Consumer a m (v a)
-consumeVector = runToVectorP toVector
-
+-- | Construct a mutable vector from a 'Producer'.  The producer will be
+-- drained.
+readMVector :: (PrimMonad m, M.MVector v a) =>
+               Producer a m () -> m (v (PrimState m) a)
+readMVector producer = M.munstream (readMStream producer)
+  
+-- | Construct a vector stream from a producer.  The producer will be
+-- drained.
+readMStream :: Monad m => Producer a m () -> Stream m a
+readMStream producer = Stream go producer Unknown
+  where
+    go s = do
+      state <- next s
+      return (step state)
+    step :: Either r (a, Producer a m r) -> Step (Producer a m r) a
+    step (Left _) = Done
+    step (Right (a, k)) = Yield a k
