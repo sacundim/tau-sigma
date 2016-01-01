@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+
 -- | Utility pipes for generating various types of noise.
 module TauSigma.Util.Pipes.Noise
     ( white
@@ -16,7 +18,6 @@ module TauSigma.Util.Pipes.Noise
     , randomWalkFrequency
 
     -- Re-exports
-    , MonadPrim
     , Rand
     ) where
 
@@ -24,6 +25,7 @@ import Control.Monad (forever, replicateM_)
 
 -- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
 -- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
+import Control.Monad.Primitive 
 import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.Tagged
@@ -109,3 +111,10 @@ flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 randomWalkFrequency
   :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
 randomWalkFrequency n = brown n >-> P.map Tagged
+
+
+
+instance PrimMonad m => PrimMonad (Rand m) where
+  type PrimState (Rand m) = PrimState m
+  primitive = lift . primitive
+  {-# INLINE primitive #-}

@@ -18,6 +18,7 @@ import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import TauSigma.Util.Allan (adevs)
 import TauSigma.Util.Pipes.Noise (Rand, white, integrate)
+import TauSigma.Util.Vector (takeVector)
 
 import Test.Hspec
 
@@ -25,7 +26,7 @@ spec :: Spec
 spec = do
   describe "wfm slope" $ do
     it "The slope of white frequency noise should be about -0.5" $ do
-      wfm <- runWithCreate (makeNoise (white 1.0 >-> integrate) 100000)
+      wfm <- runWithCreate (makeNoise 100000 (white 1.0 >-> integrate))
       let graph = adevs 1 wfm
       let failures = badSlopes (-0.5) 3.0e-2 graph
       take 10 failures `shouldBe` []
@@ -64,12 +65,9 @@ logSlope (x0,y0) (x1,y1) = slope (log x0, log y0) (log x1, log y1)
     slope (x0,y0) (x1,y1) = (y1 - y0) / (x1 - x0)
                 
 
-makeNoise
-  :: Monad m =>
-     Producer Double (Rand m) ()
-  -> Int
-  -> Rand m (V.Vector Double)
-makeNoise source size = toVector (source >-> P.take size) 
+makeNoise :: PrimMonad m =>
+             Int
+          -> Producer Double (Rand m) ()
+          -> Rand m (V.Vector Double)
+makeNoise = takeVector
 
-toVector :: Monad m => Producer a m () -> m (V.Vector a)
-toVector = fmap V.fromList . P.toListM 
