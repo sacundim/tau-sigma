@@ -20,7 +20,7 @@ import qualified Pipes.Prelude as P
 
 import TauSigma.Types
 import TauSigma.Util.CSV
-import TauSigma.Util.Pipes
+import TauSigma.Util.Pipes.Noise
 
 options :: Parser Options
 options = Options

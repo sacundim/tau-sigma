@@ -1,5 +1,5 @@
 name:                tau-sigma
-version:             0.2.0.0
+version:             0.2.0.1
 synopsis:            A command-line utility for frequency stability analysis.
 license:             BSD3
 license-file:        LICENSE
@@ -24,11 +24,11 @@ library
                      , TauSigma.Util.Allan
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
+                     , TauSigma.Util.Pipes.Noise
                      , TauSigma.Util.Vector
 
   build-depends:       Chart 
                      , Chart-diagrams 
-                     , MonadRandom 
                      , base >=4.7 && <5
                      , bytestring 
                      , cassava 
@@ -37,7 +37,11 @@ library
                      , filepath 
                      , lens 
                      , mtl 
+                     , mwc-random
+                     , mwc-random-monad
+                     , monad-primitive
                      , optparse-applicative 
+                     , parallel
                      , pipes 
                      , pipes-bytestring
                      , pipes-csv
@@ -67,7 +71,31 @@ Test-Suite spec
   Ghc-Options:         -Wall
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
+                     , containers
                      , hspec
-                     , QuickCheck
+                     , mwc-random
+                     , mwc-random-monad
+                     , monad-primitive
+                     , pipes 
+                     , pipes-vector
+                     , primitive
+                     , tau-sigma 
+                     , vector
+
+Benchmark bench
+  Type:                exitcode-stdio-1.0
+  Default-Language:    Haskell2010
+  Hs-Source-Dirs:      bench
+  Ghc-Options:         -Wall
+  Main-Is:             Main.hs
+  Build-Depends:       base >=4.7 && <5
+                     , containers
+                     , criterion
+                     , mwc-random
+                     , mwc-random-monad
+                     , monad-primitive
+                     , pipes
+                     , pipes-vector
+                     , primitive
                      , tau-sigma 
                      , vector
