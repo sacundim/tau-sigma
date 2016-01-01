@@ -6,7 +6,8 @@ import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Except
 
 import Data.Monoid
-
+import Data.Version (showVersion)
+    
 import Options.Applicative
 
 import System.Environment (getArgs)
@@ -18,6 +19,7 @@ import qualified TauSigma.Chart as Chart
 import qualified TauSigma.Convert as Convert
 import qualified TauSigma.Noise as Noise
 
+import Paths_tau_sigma (version)
 
 main :: IO ()
 main = execParser opts >>= main'
@@ -38,6 +40,10 @@ dispatch (LogLog opts) = Chart.loglog opts >> return ()
 dispatch (Chart opts) = Chart.linear opts >> return ()
 dispatch (Convert opts) = Convert.main opts
 dispatch (Noise opts) = lift (Noise.main opts)
+dispatch Version = lift printVersion
+
+printVersion :: IO ()
+printVersion = putStrLn ("tau-sigma " ++ showVersion version)
 
 
 options :: Parser Options
@@ -58,6 +64,9 @@ options =
   , command "noise"
       (info (Noise <$> Noise.options)
        (progDesc "Generate spectral noises"))
+  , command "version"
+      (info (pure Version)
+       (progDesc "Print version number"))
   ]
 
 data Options
@@ -66,3 +75,4 @@ data Options
   | Chart   Chart.Options
   | Convert Convert.Options
   | Noise   Noise.Options
+  | Version
