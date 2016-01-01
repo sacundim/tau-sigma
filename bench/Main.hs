@@ -1,15 +1,17 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Main (main) where
 
 import Criterion.Main
 
-import Control.Monad.ST
 import Control.Monad.Primitive (PrimMonad)
 import Control.Monad.Random (MonadRandom)
 
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
-import Data.Vector.Unboxed (Vector, Unbox)
-import qualified Data.Vector.Unboxed as V
+
+import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as U
 
 import Pipes
 import qualified Pipes.Prelude as P
@@ -26,10 +28,17 @@ main = defaultMain
   , adevTests
   ]
 
+
 makeNoise
   :: (MonadRandom m, PrimMonad m) =>
-     Producer Double m () -> Int -> m (Vector Double)
+     Producer Double m () -> Int -> m (U.Vector Double)
 makeNoise source size = readVector (source >-> P.take size) 
+
+makeBoxedNoise
+  :: (MonadRandom m, PrimMonad m) =>
+     Producer Double m () -> Int -> m (V.Vector Double)
+makeBoxedNoise source size = readVector (source >-> P.take size) 
+
 
 noiseTests = bgroup "noise" subgroups
   where
@@ -46,8 +55,14 @@ benchFlicker size = benchNoise (flicker octaves 1.0) size
 
 benchNoise noise size = bench (show size) $ nfIO (makeNoise noise size)
 
-adevTests = bgroup "adev" (map (go (white 1.0)) sizes)
+adevTests = bgroup "adev"
+            [ bgroup "unboxed" (map (unboxed (white 1.0)) sizes)
+            , bgroup "boxed" (map (boxed (white 1.0)) sizes)
+            ]
   where sizes = [50, 500, 5000]
-        go source size =
+        unboxed source size =
           env (makeNoise source size) $ \input -> 
+              bench (show size) $ nf (adevs 1) input
+        boxed source size =
+          env (makeBoxedNoise source size) $ \input -> 
               bench (show size) $ nf (adevs 1) input
