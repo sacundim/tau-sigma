@@ -29,7 +29,6 @@ library
 
   build-depends:       Chart 
                      , Chart-diagrams 
-                     , MonadRandom 
                      , base >=4.7 && <5
                      , bytestring 
                      , cassava 
@@ -38,6 +37,9 @@ library
                      , filepath 
                      , lens 
                      , mtl 
+                     , mwc-random
+                     , mwc-random-monad
+                     , monad-primitive
                      , optparse-applicative 
                      , parallel
                      , pipes 
@@ -80,10 +82,12 @@ Benchmark bench
   Hs-Source-Dirs:      bench
   Ghc-Options:         -Wall
   Main-Is:             Main.hs
-  Build-Depends:       MonadRandom
-                     , base >=4.7 && <5
+  Build-Depends:       base >=4.7 && <5
                      , containers
                      , criterion
+                     , mwc-random
+                     , mwc-random-monad
+                     , monad-primitive
                      , pipes
                      , pipes-vector
                      , primitive

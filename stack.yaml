@@ -9,6 +9,7 @@ packages:
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
+- mwc-random-monad-0.7.3.1
 - pipes-csv-1.4.3
 - pipes-vector-0.6.2
 

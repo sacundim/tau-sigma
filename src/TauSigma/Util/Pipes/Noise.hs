@@ -3,7 +3,7 @@ module TauSigma.Util.Pipes.Noise
     ( white
     , brown
     , flicker
-    , randomR
+    , uniformR
     , hold
     , zipSum
     , integrate
@@ -15,29 +15,40 @@ module TauSigma.Util.Pipes.Noise
     , whiteFrequency
     , flickerFrequency
     , randomWalkFrequency
+
+    -- Re-exports
+    , MonadPrim
+    , Rand
     ) where
 
 import Control.Monad (forever, replicateM_)
-import Control.Monad.Random (MonadRandom, Random, getRandomR)
+
+-- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
+-- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
+import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.Tagged
 import Pipes
 import qualified Pipes.Prelude as P
 
+import System.Random.MWC (Variate)
+import System.Random.MWC.Monad (Rand)
+import qualified System.Random.MWC.Monad as Random
+
 import TauSigma.Types
 
 
 -- | White noise is just random values.
-white :: MonadRandom m => Double -> Producer Double m ()
-white n = randomR (-n, n)
+white :: MonadPrim m => Double -> Producer Double (Rand m) ()
+white n = uniformR (-n, n)
 
 -- | Brown noise is integrated white noise.
-brown :: (MonadRandom m) => Double -> Producer Double m ()
+brown :: MonadPrim m => Double -> Producer Double (Rand m) ()
 brown n = white n >-> integrate
 
 -- | Flicker noise has 1/f power density, i.e., inversely proportional
 -- to the frequency.  
-flicker :: (MonadRandom m) => Int -> Double -> Producer Double m ()
+flicker :: MonadPrim m => Int -> Double -> Producer Double (Rand m) ()
 flicker octaves n = zipSum (map go [0..octaves])
   where go o = white n >-> hold o
 
@@ -50,8 +61,8 @@ hold octave = forever $ do
 
 
 -- | Ranged random 'Producer'.
-randomR :: (MonadRandom m, Random a) => (a, a) -> Producer a m ()
-randomR (lo, hi) = forever (lift (getRandomR (lo, hi)) >>= yield)
+uniformR :: (MonadPrim m, Variate a) => (a, a) -> Producer a (Rand m) ()
+uniformR (lo, hi) = forever (lift (Random.uniformR (lo, hi)) >>= yield)
 
 
 -- | Zip the given pipes, adding their outputs.
@@ -85,21 +96,22 @@ toFrequency = P.map unTagged >-> differentiate >-> P.map Tagged
 
 
 
-whitePhase :: MonadRandom m => Double -> Producer (TimeData Double) m ()
+whitePhase :: MonadPrim m => Double -> Producer (TimeData Double) (Rand m) ()
 whitePhase n = white n >-> P.map Tagged
 
 flickerPhase
-  :: MonadRandom m =>
-     Int -> Double -> Producer (TimeData Double) m ()
+  :: MonadPrim m =>
+     Int -> Double -> Producer (TimeData Double) (Rand m) ()
 flickerPhase octaves n = flicker octaves n >-> P.map Tagged
 
-whiteFrequency :: MonadRandom m => Double -> Producer (FreqData Double) m ()
+whiteFrequency
+  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
 whiteFrequency n = white n >-> P.map Tagged
 
 flickerFrequency
-  :: MonadRandom m => Int -> Double -> Producer (FreqData Double) m ()
+  :: MonadPrim m => Int -> Double -> Producer (FreqData Double) (Rand m) ()
 flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 
 randomWalkFrequency
-  :: MonadRandom m => Double -> Producer (FreqData Double) m ()
+  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
 randomWalkFrequency n = brown n >-> P.map Tagged

@@ -1,11 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
 
 module Main (main) where
 
 import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
-import Control.Monad.Random (MonadRandom)
+import Control.Monad.Primitive.Class (MonadPrim, BasePrimMonad)
 
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
@@ -17,6 +18,8 @@ import Pipes
 import qualified Pipes.Prelude as P
 import Pipes.Vector
 
+import System.Random.MWC.Monad (runWithCreate)
+
 import TauSigma.Util.Allan
 import TauSigma.Util.Pipes.Noise
 import TauSigma.Util.Vector
@@ -27,17 +30,6 @@ main = defaultMain
   [ noiseTests
   , adevTests
   ]
-
-
-makeNoise
-  :: (MonadRandom m, PrimMonad m) =>
-     Producer Double m () -> Int -> m (U.Vector Double)
-makeNoise source size = readVector (source >-> P.take size) 
-
-makeBoxedNoise
-  :: (MonadRandom m, PrimMonad m) =>
-     Producer Double m () -> Int -> m (V.Vector Double)
-makeBoxedNoise source size = readVector (source >-> P.take size) 
 
 
 noiseTests = bgroup "noise" subgroups
@@ -66,3 +58,20 @@ adevTests = bgroup "adev"
         boxed source size =
           env (makeBoxedNoise source size) $ \input -> 
               bench (show size) $ nf (adevs 1) input
+
+
+
+makeNoise
+  :: (PrimMonad m, MonadPrim m, BasePrimMonad m ~ IO) =>
+     Producer Double (Rand m) () -> Int -> m (U.Vector Double)
+makeNoise source size = readVector (hoistRand source >-> P.take size) 
+
+makeBoxedNoise
+  :: (PrimMonad m, MonadPrim m, BasePrimMonad m ~ IO) =>
+     Producer Double (Rand m) () -> Int -> m (V.Vector Double)
+makeBoxedNoise source size = readVector (hoistRand source >-> P.take size) 
+
+-- TRICKY: 'runWithCreate' uses a fixed seed, so this is completely
+-- deterministic!  I think that's ok for a benchmark, however.
+hoistRand :: MonadPrim m => Producer a (Rand m) r -> Producer a m r
+hoistRand = hoist runWithCreate

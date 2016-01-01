@@ -11,7 +11,10 @@ module TauSigma.Noise
 
 import Control.Applicative
 import Control.Lens
-import Control.Monad.Random (MonadRandom)
+
+-- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
+-- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
+import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.Csv (Only(..))
 import Data.Default
@@ -24,6 +27,8 @@ import Pipes
 import Pipes.ByteString (stdout)
 import Pipes.Csv 
 import qualified Pipes.Prelude as P
+
+import System.Random.MWC.Monad (runWithSystemRandomT)
 
 import TauSigma.Types
 import TauSigma.Util.Pipes.Noise
@@ -102,9 +107,9 @@ $(makeLenses ''Mix)
 
 
 
-main :: (MonadRandom m, MonadIO m) => Options -> m ()
+main :: Options -> IO ()
 main opts =
-  runEffect $ mixed (applyDefaults opts)
+  runWithSystemRandomT $ runEffect $ mixed (applyDefaults opts)
           >-> toOutputType (view outputType opts)
           >-> P.take (view howMany opts)
           >-> P.map Only
@@ -121,7 +126,7 @@ toOutputType :: Monad m => Domain -> Pipe (TimeData Double) Double m r
 toOutputType Phase = P.map unTagged
 toOutputType Frequency = toFrequency >-> P.map unTagged
 
-mixed :: MonadRandom m => Options -> Producer (TimeData Double) m ()
+mixed :: MonadPrim m => Options -> Producer (TimeData Double) (Rand m) ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
                      , auxT (flickerPhase octaves) fpm
