@@ -11,8 +11,7 @@ module TauSigma.Noise
 
 import Control.Applicative
 import Control.Lens
-import Control.Monad (forever, replicateM_)
-import Control.Monad.Random (MonadRandom, Random, getRandomR)
+import Control.Monad.Random (MonadRandom)
 
 import Data.Csv (Only(..))
 import Data.Default
@@ -27,7 +26,7 @@ import Pipes.Csv
 import qualified Pipes.Prelude as P
 
 import TauSigma.Types
-import TauSigma.Util.Pipes (toFrequency, integrate, toPhase)
+import TauSigma.Util.Pipes.Noise
 
 options :: Parser Options
 options = Options
@@ -122,7 +121,6 @@ toOutputType :: Monad m => Domain -> Pipe (TimeData Double) Double m r
 toOutputType Phase = P.map unTagged
 toOutputType Frequency = toFrequency >-> P.map unTagged
 
-
 mixed :: MonadRandom m => Options -> Producer (TimeData Double) m ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
@@ -135,52 +133,4 @@ mixed opts =
         auxF f g = fmap (>-> toPhase) (auxT f g)
         octaves = floor $ logBase 2 (fromIntegral (view howMany opts))
         
-whitePhase :: MonadRandom m => Double -> Producer (TimeData Double) m ()
-whitePhase n = white n >-> P.map Tagged
 
-flickerPhase
-  :: MonadRandom m =>
-     Int -> Double -> Producer (TimeData Double) m ()
-flickerPhase octaves n = flicker octaves n >-> P.map Tagged
-
-whiteFrequency :: MonadRandom m => Double -> Producer (FreqData Double) m ()
-whiteFrequency n = white n >-> P.map Tagged
-
-flickerFrequency
-  :: MonadRandom m => Int -> Double -> Producer (FreqData Double) m ()
-flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
-
-randomWalkFrequency
-  :: MonadRandom m => Double -> Producer (FreqData Double) m ()
-randomWalkFrequency n = brown n >-> P.map Tagged
-
-
--- | White noise is just random values.
-white :: MonadRandom m => Double -> Producer Double m ()
-white n = randomR (-n, n)
-
--- | Brown noise is integrated white noise.
-brown :: (MonadRandom m) => Double -> Producer Double m ()
-brown n = white n >-> integrate
-
--- | Flicker noise has 1/f power density, i.e., inversely proportional
--- to the frequency.  
-flicker :: (MonadRandom m) => Int -> Double -> Producer Double m ()
-flicker octaves n = zipSum (map go [0..octaves])
-  where go o = white n >-> hold o
-
--- | Hold a signal for @2^octave@ ticks.  (Yes, higher number = lower
--- octave.)
-hold :: Monad m => Int -> Pipe a a m r
-hold octave = forever $ do
-  a <- await
-  replicateM_ (2^octave) (yield a)
-
-
--- | Ranged random 'Producer'.
-randomR :: (MonadRandom m, Random a) => (a, a) -> Producer a m ()
-randomR (lo, hi) = forever (lift (getRandomR (lo, hi)) >>= yield)
-
-
-zipSum :: (Monad m, Num a) => [Producer a m ()] -> Producer a m ()
-zipSum ps = foldr1 (P.zipWith (+)) ps

@@ -24,6 +24,7 @@ library
                      , TauSigma.Util.Allan
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
+                     , TauSigma.Util.Pipes.Noise
                      , TauSigma.Util.Vector
 
   build-depends:       Chart 
@@ -38,6 +39,7 @@ library
                      , lens 
                      , mtl 
                      , optparse-applicative 
+                     , parallel
                      , pipes 
                      , pipes-bytestring
                      , pipes-csv
@@ -69,5 +71,21 @@ Test-Suite spec
   Build-Depends:       base >=4.7 && <5
                      , hspec
                      , QuickCheck
+                     , tau-sigma 
+                     , vector
+
+Benchmark bench
+  Type:                exitcode-stdio-1.0
+  Default-Language:    Haskell2010
+  Hs-Source-Dirs:      bench
+  Ghc-Options:         -Wall
+  Main-Is:             Main.hs
+  Build-Depends:       MonadRandom
+                     , base >=4.7 && <5
+                     , containers
+                     , criterion
+                     , pipes
+                     , pipes-vector
+                     , primitive
                      , tau-sigma 
                      , vector
