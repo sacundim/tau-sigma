@@ -1,5 +1,7 @@
 # `tau-sigma`: A Simple Utility for Frequency Stability Analysis
 
+[![Build Status](https://travis-ci.org/sacundim/tau-sigma.svg?branch=master)](https://travis-ci.org/sacundim/tau-sigma)
+
 This is a simple command-line utilty for analyzing the frequency
 stability of clocks in terms of their
 [**Allan deviation**](http://en.wikipedia.org/wiki/Allan_variance).
