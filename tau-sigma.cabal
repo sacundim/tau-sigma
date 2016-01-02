@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 library
   default-language:    Haskell2010
   hs-source-dirs:      src
-  Ghc-Options:         -Wall
+  Ghc-Options:         -Wall -O
 
   exposed-modules:     TauSigma.ADEV
                      , TauSigma.Chart
@@ -22,6 +22,7 @@ library
                      , TauSigma.Noise
                      , TauSigma.Types
                      , TauSigma.Statistics.Allan
+                     , TauSigma.Statistics.Hadamard
                      , TauSigma.Statistics.Theo1
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
