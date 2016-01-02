@@ -40,6 +40,7 @@ main :: IO ()
 main = defaultMain
   [ noiseTests
   , adevTests
+  , hdevTests
   , theo1Tests
   , theoBRTests
   ]
@@ -82,6 +83,12 @@ adevTests = bgroup "adev" (runStatistic statistic wfm sizes)
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [50, 500, 5000]
 
+hdevTests :: Benchmark
+hdevTests = bgroup "hdev" (runStatistic statistic wfm sizes)
+  where statistic = hdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
+
 theo1Tests :: Benchmark
 theo1Tests = bgroup "theo1" (runStatistic statistic wfm sizes)
   where statistic = theo1devs 1
@@ -93,6 +100,7 @@ theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes)
   where statistic = theoBRdevs 1
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [200, 400, 600]
+
 
 runStatistic :: Statistic -> Noise IO -> [Int] -> [Benchmark]
 runStatistic statistic noise = map runOne
