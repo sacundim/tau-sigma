@@ -62,8 +62,8 @@ example: the 1779/80 Greenwich trial of
 one of the very earliest successful precision watches.  Read more in
 [`example-data/README.md`](example-data/README.md).
 
-* [Arnold #36 ADEV](../images/arnold36_adev.svg)
-* [Arnold #36 TheoBR](../images/arnold36_theobr.svg)
+* [Arnold #36 ADEV](images/arnold36_adev.svg)
+* [Arnold #36 TheoBR](images/arnold36_theobr.svg)
 
 
 ## TODO
