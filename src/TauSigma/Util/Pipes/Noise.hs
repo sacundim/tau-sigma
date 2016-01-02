@@ -12,6 +12,9 @@ module TauSigma.Util.Pipes.Noise
     , whiteFrequency
     , flickerFrequency
     , randomWalkFrequency
+
+    , TimeData
+    , FreqData
     , toFrequency
     , toPhase
 
