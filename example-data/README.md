@@ -30,5 +30,4 @@ clock.  The transit clock's error was computed irregularly about every
 calibrations, so values for sampling periods lower than say 10 days
 are questionable.
 
-* [Arnold #36 ADEV](../images/arnold36_adev.svg)
 * [Arnold #36 TheoBR](../images/arnold36_theobr.svg)

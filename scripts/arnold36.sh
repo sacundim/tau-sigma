@@ -13,7 +13,7 @@ cat example-data/arnold36.csv \
                 --out images/arnold36_adev.svg
 
 cat example-data/arnold36.csv \
-    | tau-sigma theobr --tau0 86400 --max-tau 150 \
+    | tau-sigma theobr --tau0 86400 --max-tau 100 \
     | tau-sigma loglog \
                 --label "TheoBR" \
                 --out images/arnold36_theobr.svg
