@@ -53,15 +53,12 @@ These examples are scripted in [`script/examples.sh`](script/examples.sh).
 
 ## TODO
 
-* Unit test!
 * Error bars!
 * Triple check the flicker noise generation code.
-* Use scientific notation for log/log chart Y axis labels.
 * Smart scaling of log/log chart axes.  We need same-sized decades in
   both axes.
 * Generate charts in other formats than SVG.
 * Frequency spectra
-* Phase noises
 * Other stability statistics
 
 
