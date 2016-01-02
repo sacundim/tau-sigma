@@ -15,9 +15,9 @@ import qualified Data.Vector.Unboxed as U
 
 import Pipes
 
-import System.Random.MWC.Monad (runWithCreate)
+import System.Random.MWC.Monad (Rand, runWithCreate)
 
-import TauSigma.Util.Allan
+import TauSigma.Statistics.Allan
 import TauSigma.Util.Pipes.Noise
 import TauSigma.Util.Vector
 

@@ -28,7 +28,7 @@ import Pipes.ByteString (stdin, stdout)
 import qualified Pipes.Prelude as P
 
 import TauSigma.Types
-import TauSigma.Util.Allan
+import TauSigma.Statistics.Allan
 import TauSigma.Util.CSV
 import TauSigma.Util.Vector
 

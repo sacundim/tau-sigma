@@ -21,7 +21,7 @@ library
                      , TauSigma.Convert
                      , TauSigma.Noise
                      , TauSigma.Types
-                     , TauSigma.Util.Allan
+                     , TauSigma.Statistics.Allan
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
                      , TauSigma.Util.Pipes.Noise

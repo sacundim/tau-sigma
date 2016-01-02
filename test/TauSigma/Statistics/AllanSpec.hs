@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module TauSigma.Util.AllanSpec where
+module TauSigma.Statistics.AllanSpec where
 
 import Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
@@ -11,7 +11,7 @@ import Pipes
 
 import System.Random.MWC.Monad (Rand, runWithCreate)
 
-import TauSigma.Util.Allan (adevs)
+import TauSigma.Statistics.Allan (adevs)
 import TauSigma.Util.Pipes.Noise (white, flicker, octaves, brown, integrate)
 import TauSigma.Util.Vector (takeVector)
 
