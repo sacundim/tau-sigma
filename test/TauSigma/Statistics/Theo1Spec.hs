@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module TauSigma.Statistics.Theo1Spec where
 
 import Data.IntMap.Lazy (IntMap)
