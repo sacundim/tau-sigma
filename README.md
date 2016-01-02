@@ -8,13 +8,16 @@ It has the following subcommands:
 1. `adev`: Read a phase error series from standard input and emit
    tau/sigma ADEV pairs to standard output as CSV.  Uses the standard
    overlapped Allan deviation estimator.
-2. `loglog`: Generate a tau/sigma log-log chart from the output of
-   `adev`.
-3. `chart`: Generate a linear chart from time series data.  Meant for
+2. `theobr`: Like `adev` but uses TheoBR, a statistic for that
+   produces better estimates of long-term stability (but is much
+   slower than ADEV).
+3. `loglog`: Generate a tau/sigma log-log chart from the output of
+   `adev` or `theobr`.
+4. `chart`: Generate a linear chart from time series data.  Meant for
    plotting time or frequency error series.
-4. `noise`: A random spectral noise generator for white, flicker and
+5. `noise`: A random spectral noise generator for white, flicker and
    random walk frequency noise types, and mixes thereof.
-5. `convert`: Conversion between phase/frequency data series and units.
+6. `convert`: Conversion between phase/frequency data series and units.
 
 This tool has so far been written primarily with simplicity in mind,
 not performance.
@@ -50,6 +53,17 @@ These examples are scripted in [`script/examples.sh`](script/examples.sh).
 * [Flicker frequency modulation](images/ffm_adev.svg)
 * [Random walk frequency modulation](images/rwfm_adev.svg)
 
+### Arnold #36 pocket chronometer
+
+I wrote this utilty to help me in my quest to understand the
+performance of historical precision timepieces.  Here's a fine
+example: the 1779/80 Greenwich trial of
+[John Arnold's pocket chronometer #36](http://collections.rmg.co.uk/collections/objects/207131.html),
+one of the very earliest successful precision watches.  Read more in
+[`example-data/README.md`](example-data/README.md).
+
+* [Arnold #36 TheoBR](images/arnold36_theobr.svg)
+
 
 ## TODO
 
@@ -64,6 +78,9 @@ These examples are scripted in [`script/examples.sh`](script/examples.sh).
 
 ## References
 
+* Howe, D.A. and T.N. Tasset.  2004.
+  ["Theo1: Characterization of very long-term frequency stability."](http://tf.nist.gov/timefreq/general/pdf/1990.pdf)
+  *Proceedings of the 18th European Frequency and Time Forum (2004)*.
 * Riley, William and David A. Howe.  2008.
   [*Handbook of Frequency Stability Analysis*](http://tf.nist.gov/general/pdf/2220.pdf).
   National Institute of Standards and Technology Special Publication

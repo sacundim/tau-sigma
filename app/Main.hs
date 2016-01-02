@@ -25,6 +25,7 @@ main :: IO ()
 main = execParser opts >>= main'
   where opts = info (helper <*> options) ( fullDesc )
 
+main' :: Options -> IO ()
 main' opts = do
   r <- runExceptT (dispatch opts)
   case r of
@@ -35,7 +36,8 @@ main' opts = do
 
 
 dispatch :: Options -> ExceptT String IO ()
-dispatch (ADEV opts) = ADEV.main opts
+dispatch (ADEV opts) = ADEV.adev opts
+dispatch (TheoBR opts) = ADEV.theoBRdev opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
 dispatch (Chart opts) = Chart.linear opts >> return ()
 dispatch (Convert opts) = Convert.main opts
@@ -52,6 +54,9 @@ options =
   [ command "adev"
       (info (ADEV <$> ADEV.options)
        (progDesc "Compute Allan deviation"))
+  , command "theobr"
+      (info (TheoBR <$> ADEV.options)
+       (progDesc "Compute TheoBR deviation"))
   , command "loglog"
       (info (LogLog <$> Chart.options)
        (progDesc "Make a log/log tau/sigma graph"))
@@ -71,6 +76,7 @@ options =
 
 data Options
   = ADEV    ADEV.Options
+  | TheoBR  ADEV.Options
   | LogLog  Chart.Options
   | Chart   Chart.Options
   | Convert Convert.Options
