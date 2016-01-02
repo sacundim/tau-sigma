@@ -53,6 +53,18 @@ These examples are scripted in [`script/examples.sh`](script/examples.sh).
 * [Flicker frequency modulation](images/ffm_adev.svg)
 * [Random walk frequency modulation](images/rwfm_adev.svg)
 
+### Arnold #36 pocket chronometer
+
+I wrote this utilty to help me in my quest to understand the
+performance of historical precision timepieces.  Here's a fine
+example: the 1779/80 Greenwich trial of
+[John Arnold's pocket chronometer #36](http://collections.rmg.co.uk/collections/objects/207131.html),
+one of the very earliest successful precision watches.  Read more in
+[`example-data/README.md`](example-data/README.md).
+
+* [Arnold #36 ADEV](../images/arnold36_adev.svg)
+* [Arnold #36 TheoBR](../images/arnold36_theobr.svg)
+
 
 ## TODO
 
