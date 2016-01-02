@@ -31,8 +31,8 @@ hdevCases =
              , description = "Slope of white phase noise ~ -1.0"
              , samples     = sampleSize
              , taus        = (10, 20)
-             , expected    = (-0.0)
-             , tolerance   = 0.05
+             , expected    = (-1.0)
+             , tolerance   = 0.1
              , statistic   = hdevs 1
              , noise       = wpm
              }
@@ -41,7 +41,7 @@ hdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
-             , tolerance   = 0.18
+             , tolerance   = 0.2
              , statistic   = hdevs 1
              , noise       = fpm
              }
