@@ -22,6 +22,7 @@ library
                      , TauSigma.Noise
                      , TauSigma.Types
                      , TauSigma.Statistics.Allan
+                     , TauSigma.Statistics.Theo1
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
                      , TauSigma.Util.Pipes.Noise
