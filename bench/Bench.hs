@@ -37,13 +37,13 @@ type Statistic = U.Vector Double -> IntMap Double
 type Noise m = Producer (TimeData Double) (Rand m) ()
 
 main :: IO ()
-main = defaultMain
-  [ noiseTests
-  , adevTests
-  , hdevTests
-  , theo1Tests
-  , theoBRTests
-  ]
+main = defaultMain tests
+  where tests = [ noiseTests
+                , adevTests
+                , hdevTests
+                , theo1Tests
+                , theoBRTests
+                ]
 
 
 
@@ -93,7 +93,7 @@ theo1Tests :: Benchmark
 theo1Tests = bgroup "theo1" (runStatistic statistic wfm sizes)
   where statistic = theo1devs 1
         wfm = whiteFrequency 1.0 >-> toPhase
-        sizes = [50, 500, 5000]
+        sizes = [200, 400, 600]
 
 theoBRTests :: Benchmark
 theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes)
