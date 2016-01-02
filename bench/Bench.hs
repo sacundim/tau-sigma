@@ -18,6 +18,7 @@ import Pipes
 import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import TauSigma.Statistics.Allan
+import TauSigma.Statistics.Theo1
 import TauSigma.Util.Pipes.Noise
 import TauSigma.Util.Vector
 
@@ -26,6 +27,7 @@ main :: IO ()
 main = defaultMain
   [ noiseTests
   , adevTests
+  , theoBRTests
   ]
 
 noiseTests :: Benchmark
@@ -58,6 +60,16 @@ adevTests = bgroup "adev"
         boxed source size =
           env (runWithCreate $ makeBoxedNoise size source) $ \input -> 
               bench (show size) $ nf (adevs 1) input
+
+
+theoBRTests :: Benchmark
+theoBRTests = bgroup "theoBR"
+            [ bgroup "unboxed" (map (unboxed (white 1.0)) sizes)
+            ]
+  where sizes = [200, 400, 600]
+        unboxed source size =
+          env (runWithCreate $ makeUnboxedNoise size source) $ \input -> 
+              bench (show size) $ nf (theoBRdevs 1) input
 
 
 -- NOTE: This always uses the same random seed.
