@@ -50,58 +50,104 @@ data TestCase
 
 spec :: Spec
 spec = do
-  describe "adev" (mapM_ slopeTest adevCases)
+  adevSpec
+  theoBRSpec
+
+adevSpec :: Spec
+adevSpec = describe "adev" (mapM_ slopeTest adevCases)
 
 adevCases :: [TestCase]
 adevCases =
   [ TestCase { name        = "wpm"
              , description = "Slope of white phase noise ~ -1.0"
-             , samples     = 200000
+             , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
              , tolerance   = 0.05
              , statistic   = adevs 1
-             , noise       = whitePhase 1.0
+             , noise       = wpm
              }
-  , let len = 200000
-    in TestCase { name        = "fpm"
-                , description = "Slope of flicker phase noise ~ -1.0"
-                , samples     = len
-                , taus        = (10, 20)
-                , expected    = (-1.0)
-                , tolerance   = 0.18
-                , statistic   = adevs 1
-                , noise       = flickerPhase (octaves len) 1.0
-                }
+  , TestCase { name        = "fpm"
+             , description = "Slope of flicker phase noise ~ -1.0"
+             , samples     = sampleSize
+             , taus        = (10, 20)
+             , expected    = (-1.0)
+             , tolerance   = 0.18
+             , statistic   = adevs 1
+             , noise       = fpm
+             }
   , TestCase { name        = "wfm"
              , description = "Slope of white frequency noise ~ -0.5"
-             , samples     = 200000
+             , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-0.5)
              , tolerance   = 0.05
              , statistic   = adevs 1
-             , noise       = whiteFrequency 1.0 >-> toPhase
+             , noise       = wfm
              }
-  , let len = 200000
-    in TestCase { name        = "ffm"
-                , description = "Slope of flicker frequency noise ~ 0.0"
-                , samples     = len
-                , taus        = (10, 20)
-                , expected    = (0.0)
-                , tolerance   = 0.05
-                , statistic   = adevs 1
-                , noise       = flickerFrequency (octaves len) 1.0  >-> toPhase
-                }
+  , TestCase { name        = "ffm"
+             , description = "Slope of flicker frequency noise ~ 0.0"
+             , samples     = sampleSize
+             , taus        = (10, 20)
+             , expected    = (0.0)
+             , tolerance   = 0.05
+             , statistic   = adevs 1
+             , noise       = ffm
+             }
   , TestCase { name        = "rwfm"
              , description = "Slope of random walk frequency noise ~ 0.5"
-             , samples     = 200000
+             , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (0.5)
              , tolerance   = 0.05
              , statistic   = adevs 1
-             , noise       = randomWalkFrequency 1.0  >-> toPhase
+             , noise       = rwfm
              }
   ]
+  where sampleSize = 200000
+        wpm = whitePhase 1.0
+        fpm = flickerPhase (octaves sampleSize) 1.0
+        wfm = whiteFrequency 1.0 >-> toPhase
+        ffm = flickerFrequency (octaves sampleSize) 1.0 >-> toPhase
+        rwfm = randomWalkFrequency 1.0  >-> toPhase
+
+theoBRSpec :: Spec
+theoBRSpec = describe "theoBR" (mapM_ slopeTest theoBRCases)
+
+theoBRCases :: [TestCase]
+theoBRCases =
+  [ TestCase { name        = "wfm"
+             , description = "Slope of white frequency noise ~ -0.5"
+             , samples     = sampleSize
+             , taus        = (30, 50)
+             , expected    = (-0.5)
+             , tolerance   = 0.1
+             , statistic   = theoBRdevs 1
+             , noise       = wfm
+             }
+  , TestCase { name        = "ffm"
+             , description = "Slope of flicker frequency noise ~ 0.0"
+             , samples     = sampleSize
+             , taus        = (30, 50)
+             , expected    = (0.0)
+             , tolerance   = 0.25
+             , statistic   = theoBRdevs 1
+             , noise       = ffm
+             }
+  , TestCase { name        = "rwfm"
+             , description = "Slope of random walk frequency noise ~ 0.5"
+             , samples     = sampleSize
+             , taus        = (30, 50)
+             , expected    = (0.5)
+             , tolerance   = 0.05
+             , statistic   = theoBRdevs 1
+             , noise       = rwfm
+             }
+  ]
+  where sampleSize = 3500
+        wfm = whiteFrequency 1.0 >-> toPhase
+        ffm = flickerFrequency (octaves sampleSize) 1.0 >-> toPhase
+        rwfm = randomWalkFrequency 1.0  >-> toPhase
 
 
 -- | Validate that the slope of the tau/sigma plot is more or less
