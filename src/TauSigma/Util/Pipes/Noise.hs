@@ -5,20 +5,20 @@ module TauSigma.Util.Pipes.Noise
     ( white
     , brown
     , flicker
-    , hold
-    , zipSum
-    , integrate
-    , differentiate
-    , toFrequency
-    , toPhase
+    , octaves
+
     , whitePhase
     , flickerPhase
     , whiteFrequency
     , flickerFrequency
     , randomWalkFrequency
+    , toFrequency
+    , toPhase
 
-    -- Re-exports
-    , Rand
+    , hold
+    , zipSum
+    , integrate
+    , differentiate
     ) where
 
 import Control.Monad (forever, replicateM_)
@@ -53,6 +53,40 @@ flicker :: MonadPrim m => Int -> Double -> Producer Double (Rand m) ()
 flicker octaves n = zipSum (map go [0..octaves])
   where go o = white n >-> hold o
 
+-- | Calculate the number of octaves in a sequence of the given size.
+-- Suitable for passing as argument to 'flicker' and 'flickerFrequency'.
+octaves :: Int -> Int
+octaves size = floor $ logBase 2 (fromIntegral size)
+
+whitePhase :: MonadPrim m => Double -> Producer (TimeData Double) (Rand m) ()
+whitePhase n = white n >-> P.map Tagged
+
+flickerPhase
+  :: MonadPrim m =>
+     Int -> Double -> Producer (TimeData Double) (Rand m) ()
+flickerPhase octaves n = flicker octaves n >-> P.map Tagged
+
+whiteFrequency
+  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
+whiteFrequency n = white n >-> P.map Tagged
+
+flickerFrequency
+  :: MonadPrim m => Int -> Double -> Producer (FreqData Double) (Rand m) ()
+flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
+
+randomWalkFrequency
+  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
+randomWalkFrequency n = brown n >-> P.map Tagged
+
+-- | Convert a sequence of frequency points to phase points.
+toPhase :: (Monad m, Num a) => Pipe (FreqData a) (TimeData a) m r
+toPhase = P.map unTagged >-> integrate >-> P.map Tagged
+
+-- | Convert sequence of phase points to frequencies.
+toFrequency :: (Monad m, Num a) => Pipe (TimeData a) (FreqData a) m r
+toFrequency = P.map unTagged >-> differentiate >-> P.map Tagged
+
+
 -- | Hold a signal for @2^octave@ ticks.  (Yes, higher number = lower
 -- octave.)
 hold :: Monad m => Int -> Pipe a a m r
@@ -79,38 +113,6 @@ differentiate = await >>= differentiate'
       cur <- await
       yield (cur - prev)
       differentiate' cur
-
-
-
--- | Convert a sequence of frequency points to phase points.
-toPhase :: (Monad m, Num a) => Pipe (FreqData a) (TimeData a) m r
-toPhase = P.map unTagged >-> integrate >-> P.map Tagged
-
--- | Convert sequence of phase points to frequencies.
-toFrequency :: (Monad m, Num a) => Pipe (TimeData a) (FreqData a) m r
-toFrequency = P.map unTagged >-> differentiate >-> P.map Tagged
-
-
-
-whitePhase :: MonadPrim m => Double -> Producer (TimeData Double) (Rand m) ()
-whitePhase n = white n >-> P.map Tagged
-
-flickerPhase
-  :: MonadPrim m =>
-     Int -> Double -> Producer (TimeData Double) (Rand m) ()
-flickerPhase octaves n = flicker octaves n >-> P.map Tagged
-
-whiteFrequency
-  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
-whiteFrequency n = white n >-> P.map Tagged
-
-flickerFrequency
-  :: MonadPrim m => Int -> Double -> Producer (FreqData Double) (Rand m) ()
-flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
-
-randomWalkFrequency
-  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
-randomWalkFrequency n = brown n >-> P.map Tagged
 
 
 

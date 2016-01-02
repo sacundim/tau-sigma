@@ -40,8 +40,7 @@ noiseTests = bgroup "noise" subgroups
 benchWhite, benchBrown, benchFlicker :: Int -> Benchmark
 benchWhite = benchNoise (white 1.0)
 benchBrown = benchNoise (brown 1.0)
-benchFlicker size = benchNoise (flicker octaves 1.0) size
-  where octaves = floor (logBase 2 (fromIntegral size)) + 1
+benchFlicker size = benchNoise (flicker (octaves size) 1.0) size
 
 benchNoise :: Producer Double (Rand IO) () -> Int -> Benchmark
 benchNoise noise size =

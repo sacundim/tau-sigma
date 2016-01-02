@@ -28,7 +28,7 @@ import Pipes.ByteString (stdout)
 import Pipes.Csv 
 import qualified Pipes.Prelude as P
 
-import System.Random.MWC.Monad (runWithSystemRandomT)
+import System.Random.MWC.Monad (Rand, runWithSystemRandomT)
 
 import TauSigma.Types
 import TauSigma.Util.Pipes.Noise
@@ -129,13 +129,13 @@ toOutputType Frequency = toFrequency >-> P.map unTagged
 mixed :: MonadPrim m => Options -> Producer (TimeData Double) (Rand m) ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
-                     , auxT (flickerPhase octaves) fpm
+                     , auxT (flickerPhase (octaves size)) fpm
                      , auxF whiteFrequency wfm 
-                     , auxF (flickerFrequency octaves) ffm 
+                     , auxF (flickerFrequency (octaves size)) ffm 
                      , auxF randomWalkFrequency rwfm 
                      ]
   where auxT f g = f <$> view (mix . g) opts
         auxF f g = fmap (>-> toPhase) (auxT f g)
-        octaves = floor $ logBase 2 (fromIntegral (view howMany opts))
+        size = view howMany opts
         
 
