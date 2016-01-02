@@ -95,5 +95,6 @@ Benchmark bench
                      , mwc-random-monad
                      , pipes
                      , primitive
+                     , tagged
                      , tau-sigma 
                      , vector

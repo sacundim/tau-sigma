@@ -8,80 +8,94 @@ import Criterion.Main
 import Control.Monad.Primitive (PrimMonad)
 
 import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
-
-import qualified Data.Vector as V
+import Data.Tagged (Tagged(..))
 import qualified Data.Vector.Unboxed as U
 
 import Pipes
+import qualified Pipes.Prelude as P
 
 import System.Random.MWC.Monad (Rand, runWithCreate)
 
-import TauSigma.Statistics.Allan
-import TauSigma.Statistics.Theo1
+import TauSigma.Statistics.Allan (adevs)
+import TauSigma.Statistics.Hadamard (hdevs)
+import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
+
 import TauSigma.Util.Pipes.Noise
+  ( TimeData
+  , whitePhase
+  , flickerPhase
+  , whiteFrequency
+  , flickerFrequency
+  , randomWalkFrequency
+  , toPhase
+  , octaves
+  )
 import TauSigma.Util.Vector
 
+
+type Statistic = U.Vector Double -> IntMap Double
+type Noise m = Producer (TimeData Double) (Rand m) ()
 
 main :: IO ()
 main = defaultMain
   [ noiseTests
   , adevTests
+  , theo1Tests
   , theoBRTests
   ]
+
+
 
 noiseTests :: Benchmark
 noiseTests = bgroup "noise" subgroups
   where
     sizes = [50, 500, 5000]
-    subgroups = [ bgroup "white"   (map benchWhite sizes)
-                , bgroup "brown"   (map benchBrown sizes)
-                , bgroup "flicker" (map benchFlicker sizes)
+    subgroups = [ bgroup "wpm" (map benchWPM sizes)
+                , bgroup "fpm" (map benchFPM sizes)
+                , bgroup "wfm" (map benchWFM sizes)
+                , bgroup "ffm" (map benchFFM sizes)
+                , bgroup "rwfm" (map benchRWFM sizes)
                 ]
 
-benchWhite, benchBrown, benchFlicker :: Int -> Benchmark
-benchWhite = benchNoise (white 1.0)
-benchBrown = benchNoise (brown 1.0)
-benchFlicker size = benchNoise (flicker (octaves size) 1.0) size
+benchWPM, benchFPM, benchWFM, benchFFM, benchRWFM :: Int -> Benchmark
+benchWPM = benchNoise (whitePhase 1.0)
+benchWFM = benchNoise (whiteFrequency 1.0 >-> toPhase)
 
-benchNoise :: Producer Double (Rand IO) () -> Int -> Benchmark
+benchRWFM = benchNoise (randomWalkFrequency 1.0 >-> toPhase)
+
+benchFPM size = benchNoise (flickerPhase (octaves size) 1.0) size
+benchFFM size =
+  benchNoise (flickerFrequency (octaves size) 1.0 >-> toPhase) size
+
+benchNoise :: Noise IO -> Int -> Benchmark
 benchNoise noise size =
-  bench (show size) $ nfIO (runWithCreate $ makeUnboxedNoise size noise)
+  bench (show size) $ nfIO (runWithCreate $ takeNoise size noise)
+
+takeNoise :: PrimMonad m => Int -> Noise m -> Rand m (U.Vector Double)
+takeNoise samples noise = takeVector samples (noise >-> P.map unTagged)
+
+
 
 adevTests :: Benchmark
-adevTests = bgroup "adev"
-            [ bgroup "unboxed" (map (unboxed (white 1.0)) sizes)
-            , bgroup "boxed" (map (boxed (white 1.0)) sizes)
-            ]
-  where sizes = [50, 500, 5000]
-        unboxed source size =
-          env (runWithCreate $ makeUnboxedNoise size source) $ \input -> 
-              bench (show size) $ nf (adevs 1) input
-        boxed source size =
-          env (runWithCreate $ makeBoxedNoise size source) $ \input -> 
-              bench (show size) $ nf (adevs 1) input
+adevTests = bgroup "adev" (runStatistic statistic wfm sizes)
+  where statistic = adevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
 
+theo1Tests :: Benchmark
+theo1Tests = bgroup "theo1" (runStatistic statistic wfm sizes)
+  where statistic = theo1devs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
 
 theoBRTests :: Benchmark
-theoBRTests = bgroup "theoBR"
-            [ bgroup "unboxed" (map (unboxed (white 1.0)) sizes)
-            ]
-  where sizes = [200, 400, 600]
-        unboxed source size =
-          env (runWithCreate $ makeUnboxedNoise size source) $ \input -> 
-              bench (show size) $ nf (theoBRdevs 1) input
+theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes)
+  where statistic = theoBRdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [200, 400, 600]
 
-
--- NOTE: This always uses the same random seed.
-makeBoxedNoise
-  :: PrimMonad m =>
-     Int -> Producer Double (Rand m) () -> Rand m (V.Vector Double)
-makeBoxedNoise n = takeVector n
-
-
--- NOTE: This always uses the same random seed.
-makeUnboxedNoise
-  :: PrimMonad m =>
-     Int -> Producer Double (Rand m) () -> Rand m (V.Vector Double)
-makeUnboxedNoise n = takeVector n
-
+runStatistic :: Statistic -> Noise IO -> [Int] -> [Benchmark]
+runStatistic statistic noise = map runOne
+  where runOne size = 
+          env (runWithCreate $ takeNoise size noise) $ \input -> 
+            bench (show size) $ nf statistic (input)
