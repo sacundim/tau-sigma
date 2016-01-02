@@ -1,7 +1,6 @@
-
--- | Allan variance and deviation estimators.
+-- | Allan variance and deviation estimators.  See:
 --
--- See: http://tf.nist.gov/general/pdf/2220.pdf
+-- * http://tf.nist.gov/general/pdf/2220.pdf
 --
 module TauSigma.Statistics.Allan
        ( Tau0
