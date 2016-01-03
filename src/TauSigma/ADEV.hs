@@ -5,6 +5,8 @@ module TauSigma.ADEV
        ( Options
        , options
        , adev
+       , mdev
+       , tdev
        , hdev
        , totdev
        , theoBRdev
@@ -31,7 +33,7 @@ import Pipes.ByteString (stdin, stdout)
 import qualified Pipes.Prelude as P
 
 import TauSigma.Types
-import TauSigma.Statistics.Allan (adevs)
+import TauSigma.Statistics.Allan (adevs, mdevs, tdevs)
 import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Total (totdevs)
 import TauSigma.Statistics.Theo1 (theoBRdevs)
@@ -66,6 +68,12 @@ options = Options
 
 adev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
 adev opts = run opts (adevs (view tau0 opts))
+
+mdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
+mdev opts = run opts (mdevs (view tau0 opts))
+
+tdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
+tdev opts = run opts (tdevs (view tau0 opts))
 
 hdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
 hdev opts = run opts (hdevs (view tau0 opts))

@@ -3,20 +3,21 @@
 -- /Handbook of Frequency Stability Analysis/.
 module TauSigma.Statistics.RileySpec where
 
+import Control.Monad (unless)
+
 import Data.Tagged
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 
 import TauSigma.Types
 import TauSigma.Statistics.Util (integrate)
-import TauSigma.Statistics.Allan (adev)
+import TauSigma.Statistics.Allan (adev, mdev, tdev)
 import TauSigma.Statistics.Hadamard (hdev)
 import TauSigma.Statistics.Total (totdev)
+import TauSigma.Statistics.ComparisonTest
 
 import Test.Hspec
 
-diff :: Num a => a -> a -> a
-diff x y = abs (x - y)
 
 spec :: Spec
 spec = do
@@ -26,32 +27,32 @@ spec = do
       it "tau = 10"  $ adev 1  10 `shouldBeAbout` 9.159953e-02
       it "tau = 100" $ adev 1 100 `shouldBeAbout` 3.241343e-02
   
+    describe "Modified Allan Deviation" $ do
+      it "tau = 1"   $ mdev 1   1 `shouldBeAbout` 2.922319e-01
+      it "tau = 10"  $ mdev 1  10 `shouldBeAbout` 6.172376e-02
+      it "tau = 100" $ mdev 1 100 `shouldBeAbout` 2.170921e-02
+
+    describe "Time Deviation" $ do
+      it "tau = 1"   $ tdev 1   1 `shouldBeAbout` 1.687202e-01
+      it "tau = 10"  $ tdev 1  10 `shouldBeAbout` 3.563623e-01
+      it "tau = 100" $ tdev 1 100 `shouldBeAbout` 1.253382e-00
+
     describe "Overlapping Hadamard Deviation" $ do
       it "tau = 1"   $ hdev 1   1 `shouldBeAbout` 2.943883e-01
-      it "tau = 10"  $ hdev 1   10 `shouldBeAbout` 9.581083e-02
+      it "tau = 10"  $ hdev 1  10 `shouldBeAbout` 9.581083e-02
       it "tau = 100" $ hdev 1 100 `shouldBeAbout` 3.237638e-02
   
     describe "Total Deviation" $ do
       it "tau = 1"   $ totdev 1   1 `shouldBeAbout` 2.922319e-01
       it "tau = 10"  $ totdev 1  10 `shouldBeAbout` 9.134743e-02
       it "tau = 100" $ totdev 1 100 `shouldBeAbout` 3.406530e-02
-  
 
-shouldBeAbout
-  :: (Floating a, Ord a, Show a) =>
-     (Vector (TimeData Double) -> a)
-     -> a
-     -> Expectation
-stat `shouldBeAbout` expected =
-  diff (stat rileyData) expected `shouldSatisfy` tolerance
-  where diff :: Num a => a -> a -> a
-        diff x y = abs (x - y)
-        tolerance :: (Ord a, Floating a) => a -> Bool
-        tolerance = (<=5.0e-8)
+  where shouldBeAbout = comparison rileyData 5.0e-7
+
 
 -- | Riley's test data (http://www.wriley.com/tst_suit.dat).
-rileyData :: Vector (TimeData Double)
-rileyData = integrate (V.fromList (map retag raw))
+rileyData :: Vector Double
+rileyData = integrate (V.fromList (map untag raw))
   where raw :: [FreqData Double]
         raw = [ 5.748904731939040e-01
               , 1.841829699390490e-01
