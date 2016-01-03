@@ -51,9 +51,9 @@ data Options
 
 dispatch :: Options -> ExceptT String IO ()
 dispatch (ADEV opts) = ADEV.adev opts
-dispatch (HDEV opts) = ADEV.mdev opts
-dispatch (MDEV opts) = ADEV.tdev opts
-dispatch (TDEV opts) = ADEV.hdev opts
+dispatch (MDEV opts) = ADEV.mdev opts
+dispatch (TDEV opts) = ADEV.tdev opts
+dispatch (HDEV opts) = ADEV.hdev opts
 dispatch (TOTDEV opts) = ADEV.totdev opts
 dispatch (TheoBR opts) = ADEV.theoBRdev opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
