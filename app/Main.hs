@@ -38,6 +38,7 @@ main' opts = do
 data Options
   = ADEV    ADEV.Options
   | HDEV    ADEV.Options
+  | TOTDEV  ADEV.Options
   | TheoBR  ADEV.Options
   | LogLog  Chart.Options
   | Chart   Chart.Options
@@ -49,6 +50,7 @@ data Options
 dispatch :: Options -> ExceptT String IO ()
 dispatch (ADEV opts) = ADEV.adev opts
 dispatch (HDEV opts) = ADEV.hdev opts
+dispatch (TOTDEV opts) = ADEV.totdev opts
 dispatch (TheoBR opts) = ADEV.theoBRdev opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
 dispatch (Chart opts) = Chart.linear opts >> return ()
