@@ -8,8 +8,7 @@ import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.SlopeTest
 
 import TauSigma.Util.Pipes.Noise
-  ( TimeData
-  , whitePhase
+  ( whitePhase
   , flickerPhase
   , whiteFrequency
   , flickerFrequency

@@ -14,7 +14,6 @@ module TauSigma.Statistics.Hadamard
        ) where
 
 import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
@@ -38,13 +37,13 @@ hdev tau0 m xs = sqrt (hvar tau0 m xs)
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 hvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
-hvars tau0 xs = IntMap.fromList (map step [1..maxTaus])
-  where step m = (m, hvar tau0 m xs)
-        maxTaus = (V.length xs - 1) `div` 3
+hvars tau0 xs = allTaus [1..maxTaus] (hvar tau0) xs
+  where maxTaus = (V.length xs - 1) `div` 3
                     
 -- | Overlapped estimator of Hadamard deviation at all sampling intervals.
 -- Note that this returns a lazy 'IntMap' whose thunks hold on to the
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 hdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
-hdevs tau0 xs = IntMap.map sqrt (hvars tau0 xs)
+hdevs tau0 xs = allTaus [1..maxTaus] (hdev tau0) xs
+  where maxTaus = (V.length xs - 1) `div` 3

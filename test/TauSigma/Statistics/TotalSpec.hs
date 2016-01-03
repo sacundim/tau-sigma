@@ -1,8 +1,13 @@
-module TauSigma.Statistics.AllanSpec where
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module TauSigma.Statistics.TotalSpec where
+
+import Data.IntMap.Lazy (IntMap)
+import qualified Data.Vector.Unboxed as U
 
 import Pipes
 
-import TauSigma.Statistics.Allan (adevs)
+import TauSigma.Statistics.Total (totdevs, (!*))
 import TauSigma.Statistics.SlopeTest
 
 import TauSigma.Util.Pipes.Noise
@@ -15,21 +20,35 @@ import TauSigma.Util.Pipes.Noise
   , octaves
   )
 
-import Test.Hspec
+import Test.Hspec (Spec, describe, it)
+import Test.QuickCheck (property)
 
 
 spec :: Spec
-spec = describe "adev" (mapM_ slopeTest adevCases)
+spec = do
+  describe "reflection" $
+    it "A reflected time sequence is defined correctly at all of its range" $
+      property prop_reflection
+      
+  describe "totdev" (mapM_ slopeTest totdevCases)
 
-adevCases :: [TestCase]
-adevCases =
+prop_reflection :: Int -> Bool
+prop_reflection size = map (xs!*) xs' == xs'
+  where xs :: U.Vector Int
+        xs = U.generate size id
+        xs' :: [Int]
+        xs' = [2 - size .. 2*size - 3]
+
+
+totdevCases :: [TestCase]
+totdevCases =
   [ TestCase { name        = "wpm"
              , description = "Slope of white phase noise ~ -1.0"
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
              , tolerance   = 0.05
-             , statistic   = adevs 1
+             , statistic   = totdevs 1
              , noise       = wpm
              }
   , TestCase { name        = "fpm"
@@ -38,7 +57,7 @@ adevCases =
              , taus        = (10, 20)
              , expected    = (-1.0)
              , tolerance   = 0.18
-             , statistic   = adevs 1
+             , statistic   = totdevs 1
              , noise       = fpm
              }
   , TestCase { name        = "wfm"
@@ -47,7 +66,7 @@ adevCases =
              , taus        = (10, 20)
              , expected    = (-0.5)
              , tolerance   = 0.05
-             , statistic   = adevs 1
+             , statistic   = totdevs 1
              , noise       = wfm
              }
   , TestCase { name        = "ffm"
@@ -56,7 +75,7 @@ adevCases =
              , taus        = (10, 20)
              , expected    = (0.0)
              , tolerance   = 0.05
-             , statistic   = adevs 1
+             , statistic   = totdevs 1
              , noise       = ffm
              }
   , TestCase { name        = "rwfm"
@@ -65,7 +84,7 @@ adevCases =
              , taus        = (10, 20)
              , expected    = (0.5)
              , tolerance   = 0.05
-             , statistic   = adevs 1
+             , statistic   = totdevs 1
              , noise       = rwfm
              }
   ]

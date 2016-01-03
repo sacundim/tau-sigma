@@ -1,5 +1,5 @@
 name:                tau-sigma
-version:             0.3.1
+version:             0.3.2
 synopsis:            A command-line utility for frequency stability analysis.
 license:             BSD3
 license-file:        LICENSE
@@ -24,6 +24,7 @@ library
                      , TauSigma.Statistics.Allan
                      , TauSigma.Statistics.Hadamard
                      , TauSigma.Statistics.Theo1
+                     , TauSigma.Statistics.Total
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
                      , TauSigma.Util.Pipes.Noise
@@ -78,6 +79,7 @@ Test-Suite spec
                      , mwc-random-monad
                      , pipes 
                      , primitive
+                     , QuickCheck
                      , tagged
                      , tau-sigma 
                      , vector
