@@ -2,9 +2,6 @@
 --
 -- * http://tf.nist.gov/general/pdf/2220.pdf
 --
--- But note that their formula for hvar is wrong.  I've corrected it
--- below.
---
 module TauSigma.Statistics.Hadamard
        ( Tau0
        , hvar
@@ -23,10 +20,9 @@ import TauSigma.Statistics.Util
 
 -- | Overlapped estimator of Hadamard variance at one sampling interval.
 hvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
-hvar tau0 m xs = sumsq / fromIntegral divisor
+hvar tau0 m xs = sumsq 0 (V.length xs - 3*m) term / fromIntegral divisor
   where divisor = 6 * m^2 * tau0^2 * (V.length xs - 3*m)
-        sumsq = sumGen (V.length xs - 3*m) term
-          where term i = (xs!(i+3*m) - 3*xs!(i+2*m) + 3*xs!(i+m) - xs!i)^2
+        term i = xs!(i+3*m) - 3*xs!(i+2*m) + 3*xs!(i+m) - xs!i
 
 -- | Overlapped estimator of Hadamard deviation at one sampling interval.
 hdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a

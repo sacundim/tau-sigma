@@ -29,7 +29,7 @@ import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
 import TauSigma.Statistics.Allan (avars)
-import TauSigma.Statistics.Util (Tau0, sumGen)
+import TauSigma.Statistics.Util (Tau0, summation)
 
 
 theo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
@@ -59,8 +59,8 @@ theo1devs tau0 xs = fmap sqrt (theo1vars tau0 xs)
 unsafeTheo1 :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 unsafeTheo1 tau0 m xs = sumsq / (0.75 * fromIntegral divisor)
   where divisor = (V.length xs - m) * (m * tau0)^2
-        sumsq = sumGen (V.length xs - m) step1
-          where step1 i = sumGen (m `div` 2) step2
+        sumsq = summation 0 (V.length xs - m) step1
+          where step1 i = summation 0 (m `div` 2) step2
                   where step2 d = term^2 / fromIntegral (halfM - d)
                           where halfM = m `div` 2
                                 term = (xs!i - xs!(i - d + halfM))
@@ -99,9 +99,9 @@ toTheoBRvars size allans theo1s = IntMap.fromSet go (allTaus size)
                 theo1AtM = unsafe m theo1s
 
                 ratio :: a
-                ratio = sumGen n step
-                  where step :: Int -> a
-                        step i = theAvar / theTheo1
+                ratio = summation 0 n term
+                  where term :: Int -> a
+                        term i = theAvar / theTheo1
                           where theAvar :: a
                                 theAvar  = unsafe (9 + 3*i) allans
                                 theTheo1 :: a

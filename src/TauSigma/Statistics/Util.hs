@@ -3,7 +3,8 @@ module TauSigma.Statistics.Util
        ( Tau0
        , integrate
        , differences
-       , sumGen
+       , summation
+       , sumsq
        , allTaus
        ) where
 
@@ -12,15 +13,12 @@ import qualified Data.IntMap.Lazy as IntMap
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
-import qualified Data.Vector.Fusion.Stream as Stream
 
 
 type Tau0 = Int
 
 
--- | All the functions in this module take phase error sequences as
--- input.  This function converts frequency error data to phase error
--- data.
+-- | Converts frequency error data to phase error data.
 integrate :: (Num a, Vector v a) => v a -> v a
 {-# INLINE integrate #-}
 integrate xs = V.scanl' (+) 0 xs
@@ -32,10 +30,28 @@ differences :: (Num a, Vector v a) => v a -> v a
 differences xs | V.null xs = V.empty
 differences xs = V.zipWith (+) (V.map negate xs) (V.tail xs)
 
--- | This is equivalent to the composition of 'V.sum' and 'V.generate'.
-sumGen :: Num a => Int -> (Int -> a) -> a
-{-# INLINE sumGen #-}
-sumGen n f = Stream.foldl' (+) 0 (Stream.generate n f)
+
+-- | Sum a series of 'Int'-indexed terms.  Inclusive start, exclusive end.
+summation :: Num a => Int -> Int -> (Int -> a) -> a
+{-# INLINE summation #-}
+summation from to term
+  | from > to = error "bad range in summation"
+  | otherwise = go 0 from
+  where go subtotal i
+          | i < to    = go (subtotal + term i) (i+1)
+          | otherwise = subtotal
+
+-- | Sum the squares of a series of 'Int'-indexed terms.  Inclusive
+-- start, exclusive end.
+sumsq :: Num a => Int -> Int -> (Int -> a) -> a
+{-# INLINE sumsq #-}
+sumsq from to term
+  | from > to = error "bad range in summation"
+  | otherwise = go 0 from
+  where go subtotal i
+          | i < to    = go (subtotal + (term i)^2) (i+1)
+          | otherwise = subtotal
+
 
 -- | Auxiliary function to compute one statistic at all given taus
 allTaus :: Vector v a => [Tau0] -> (Tau0 -> v a -> a) -> v a -> IntMap a

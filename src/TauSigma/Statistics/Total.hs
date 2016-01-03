@@ -42,11 +42,10 @@ infixl 9 !*
 
 -- | TOTVAR estimator at one sampling interval.
 totvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
-totvar tau0 m xs = sumsq / fromIntegral divisor
+totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / fromIntegral divisor
   where divisor = 2 * m^2 * tau0^2 * (V.length xs - 2)
-        sumsq = sumGen (V.length xs - 1) term
-          where term notI = (xs!*(i-m) - 2*xs!*i + xs!*(i+m))^2
-                  where i = notI+1
+        term notI = xs!*(i-m) - 2*xs!*i + xs!*(i+m)
+          where i = notI+1
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
 totdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
