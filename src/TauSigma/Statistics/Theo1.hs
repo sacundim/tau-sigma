@@ -96,10 +96,18 @@ toTheoBRvars size allans theo1s = IntMap.mapWithKey go theo1s
         go _ theo1AtM = (1 / fromIntegral (n+1)) * ratio * theo1AtM 
 
         n :: Int
+        -- From Howe & Tasset:
         n = floor (((0.1 * fromIntegral size) / 3) - 3)
+{- Riley has this instead:
+
+        n = floor (fromIntegral size / 6 - 3)
+
+   Which is way slower and for some tests produces Maybe.fromJust: Nothing
+   errors in the ratio code below.
+-}
 
         ratio :: a
-        ratio = summation 0 n term
+        ratio = summation 0 (n+1) term
           where term :: Int -> a
                 term i = theAvar / theTheo1
                   where unsafe :: Int -> IntMap a -> a
