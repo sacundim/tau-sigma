@@ -21,7 +21,11 @@ import TauSigma.Statistics.Util
 -- | Overlapped estimator of Hadamard variance at one sampling interval.
 hvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 hvar tau0 m xs = sumsq 0 (V.length xs - 3*m) term / fromIntegral divisor
-  where divisor = 6 * m^2 * tau0^2 * (V.length xs - 3*m)
+  where divisor :: Integer
+        divisor = 6 * m'^2 * tau0'^2 * (len - 3*m')
+          where m' = fromIntegral m
+                tau0' = fromIntegral tau0
+                len = fromIntegral (V.length xs)
         term i = xs!(i+3*m) - 3*xs!(i+2*m) + 3*xs!(i+m) - xs!i
 
 -- | Overlapped estimator of Hadamard deviation at one sampling interval.

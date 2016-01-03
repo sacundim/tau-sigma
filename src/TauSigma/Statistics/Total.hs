@@ -43,7 +43,11 @@ infixl 9 !*
 -- | TOTVAR estimator at one sampling interval.
 totvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / fromIntegral divisor
-  where divisor = 2 * m^2 * tau0^2 * (V.length xs - 2)
+  where divisor :: Integer
+        divisor = 2 * m'^2 * tau0'^2 * (len - 2)
+          where m' = fromIntegral m
+                tau0' = fromIntegral tau0
+                len = fromIntegral (V.length xs)
         term notI = xs!*(i-m) - 2*xs!*i + xs!*(i+m)
           where i = notI+1
 

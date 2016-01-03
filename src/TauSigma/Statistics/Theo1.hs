@@ -22,9 +22,6 @@ import Data.Maybe (fromJust)
 import Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
 
-import Data.IntSet (IntSet)
-import qualified Data.IntSet as IntSet
-
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
@@ -61,7 +58,11 @@ theo1Taus size = filter even [10..limit]
 -- 'theo1vars' unless you really know what you're doing.
 unsafeTheo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
-  where divisor = (V.length xs - m) * (m * tau0)^2
+  where divisor :: Integer
+        divisor = (len - m') * (m' * tau0')^2
+          where m' = fromIntegral m
+                tau0' = fromIntegral tau0
+                len = fromIntegral (V.length xs)
         outer = summation 0 (V.length xs - m) middle
           where middle i = summation 0 (m `div` 2) inner
                   where inner d = term^2 / fromIntegral (halfM - d)
@@ -95,7 +96,7 @@ toTheoBRvars size allans theo1s = IntMap.mapWithKey go theo1s
         n = floor (((0.1 * fromIntegral size) / 3) - 3)
 
         go :: Int -> a -> a
-        go m theo1AtM = (1 / fromIntegral (n+1)) * ratio * theo1AtM 
+        go _ theo1AtM = (1 / fromIntegral (n+1)) * ratio * theo1AtM 
           where ratio :: a
                 ratio = summation 0 n term
                   where term :: Int -> a
