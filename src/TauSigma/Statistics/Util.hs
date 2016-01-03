@@ -4,7 +4,11 @@ module TauSigma.Statistics.Util
        , integrate
        , differences
        , sumGen
+       , allTaus
        ) where
+
+import Data.IntMap.Lazy (IntMap)
+import qualified Data.IntMap.Lazy as IntMap
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
@@ -12,6 +16,7 @@ import qualified Data.Vector.Fusion.Stream as Stream
 
 
 type Tau0 = Int
+
 
 -- | All the functions in this module take phase error sequences as
 -- input.  This function converts frequency error data to phase error
@@ -32,3 +37,8 @@ sumGen :: Num a => Int -> (Int -> a) -> a
 {-# INLINE sumGen #-}
 sumGen n f = Stream.foldl' (+) 0 (Stream.generate n f)
 
+-- | Auxiliary function to compute one statistic at all given taus
+allTaus :: Vector v a => [Tau0] -> (Tau0 -> v a -> a) -> v a -> IntMap a
+{-# INLINE allTaus #-}
+allTaus taus statistic xs = IntMap.fromList (map step taus)
+  where step m = (m, statistic m xs)

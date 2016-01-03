@@ -11,7 +11,7 @@ module TauSigma.Statistics.Allan
        ) where
 
 import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
+
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
@@ -34,15 +34,15 @@ adev tau0 m xs = sqrt (avar tau0 m xs)
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 avars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
-avars tau0 xs = IntMap.fromList (map step [1..maxTaus])
-  where step m = (m, avar tau0 m xs)
-        maxTaus = (V.length xs - 1) `div` 2
+avars tau0 xs = allTaus [1..maxTaus] (avar tau0) xs
+  where maxTaus = (V.length xs - 1) `div` 2
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
 -- Note that this returns a lazy 'IntMap' whose thunks hold on to the
 -- input vector.  You're going to want to force the ones you want
 -- right away and discard the map!
 adevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
-adevs tau0 xs = IntMap.map sqrt (avars tau0 xs)
+adevs tau0 xs = allTaus [1..maxTaus] (adev tau0) xs
+  where maxTaus = (V.length xs - 1) `div` 2
 
 

@@ -28,8 +28,8 @@ import qualified Data.IntSet as IntSet
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
-import TauSigma.Statistics.Allan
-import TauSigma.Statistics.Util
+import TauSigma.Statistics.Allan (avars)
+import TauSigma.Statistics.Util (Tau0, sumGen)
 
 
 theo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
