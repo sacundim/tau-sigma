@@ -92,22 +92,23 @@ toTheoBRvars
   -> IntMap a   -- ^ The 'theo1vars' result
   -> IntMap a
 toTheoBRvars size allans theo1s = IntMap.mapWithKey go theo1s
-  where n :: Int
+  where go :: Int -> a -> a
+        go _ theo1AtM = (1 / fromIntegral (n+1)) * ratio * theo1AtM 
+
+        n :: Int
         n = floor (((0.1 * fromIntegral size) / 3) - 3)
 
-        go :: Int -> a -> a
-        go _ theo1AtM = (1 / fromIntegral (n+1)) * ratio * theo1AtM 
-          where ratio :: a
-                ratio = summation 0 n term
-                  where term :: Int -> a
-                        term i = theAvar / theTheo1
-                          where unsafe :: Int -> IntMap a -> a
-                                {-# INLINE unsafe #-}
-                                unsafe k m = fromJust (IntMap.lookup k m)
-                                theAvar :: a
-                                theAvar  = unsafe (9 + 3*i) allans
-                                theTheo1 :: a
-                                theTheo1 = unsafe (12 + 4*i) theo1s
+        ratio :: a
+        ratio = summation 0 n term
+          where term :: Int -> a
+                term i = theAvar / theTheo1
+                  where unsafe :: Int -> IntMap a -> a
+                        {-# INLINE unsafe #-}
+                        unsafe k m = fromJust (IntMap.lookup k m)
+                        theAvar :: a
+                        theAvar  = unsafe (9 + 3*i) allans
+                        theTheo1 :: a
+                        theTheo1 = unsafe (12 + 4*i) theo1s
 
 toTheoBRdevs
   :: forall a. (Floating a, RealFrac a) =>
