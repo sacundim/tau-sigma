@@ -37,6 +37,8 @@ main' opts = do
 
 data Options
   = ADEV    ADEV.Options
+  | MDEV    ADEV.Options
+  | TDEV    ADEV.Options
   | HDEV    ADEV.Options
   | TOTDEV  ADEV.Options
   | TheoBR  ADEV.Options
@@ -49,7 +51,9 @@ data Options
 
 dispatch :: Options -> ExceptT String IO ()
 dispatch (ADEV opts) = ADEV.adev opts
-dispatch (HDEV opts) = ADEV.hdev opts
+dispatch (HDEV opts) = ADEV.mdev opts
+dispatch (MDEV opts) = ADEV.tdev opts
+dispatch (TDEV opts) = ADEV.hdev opts
 dispatch (TOTDEV opts) = ADEV.totdev opts
 dispatch (TheoBR opts) = ADEV.theoBRdev opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
@@ -68,6 +72,12 @@ options =
   [ command "adev"
       (info (ADEV <$> ADEV.options)
        (progDesc "Compute Allan deviation"))
+  , command "mdev"
+      (info (MDEV <$> ADEV.options)
+       (progDesc "Compute Modified Allan deviation"))
+  , command "tdev"
+      (info (TDEV <$> ADEV.options)
+       (progDesc "Compute Time deviation"))
   , command "hdev"
       (info (HDEV <$> ADEV.options)
        (progDesc "Compute Hadamard deviation"))
