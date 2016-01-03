@@ -35,8 +35,20 @@ main' opts = do
    Right () -> exitSuccess
 
 
+data Options
+  = ADEV    ADEV.Options
+  | HDEV    ADEV.Options
+  | TheoBR  ADEV.Options
+  | LogLog  Chart.Options
+  | Chart   Chart.Options
+  | Convert Convert.Options
+  | Noise   Noise.Options
+  | Version
+
+
 dispatch :: Options -> ExceptT String IO ()
 dispatch (ADEV opts) = ADEV.adev opts
+dispatch (HDEV opts) = ADEV.hdev opts
 dispatch (TheoBR opts) = ADEV.theoBRdev opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
 dispatch (Chart opts) = Chart.linear opts >> return ()
@@ -54,6 +66,9 @@ options =
   [ command "adev"
       (info (ADEV <$> ADEV.options)
        (progDesc "Compute Allan deviation"))
+  , command "hdev"
+      (info (HDEV <$> ADEV.options)
+       (progDesc "Compute Hadamard deviation"))
   , command "theobr"
       (info (TheoBR <$> ADEV.options)
        (progDesc "Compute TheoBR deviation"))
@@ -74,11 +89,3 @@ options =
        (progDesc "Print version number"))
   ]
 
-data Options
-  = ADEV    ADEV.Options
-  | TheoBR  ADEV.Options
-  | LogLog  Chart.Options
-  | Chart   Chart.Options
-  | Convert Convert.Options
-  | Noise   Noise.Options
-  | Version
