@@ -1,15 +1,12 @@
 module TauSigma.Statistics.AllanSpec where
 
-import Data.IntMap.Lazy (IntMap)
-
 import Pipes
 
 import TauSigma.Statistics.Allan (adevs)
 import TauSigma.Statistics.SlopeTest
 
 import TauSigma.Util.Pipes.Noise
-  ( TimeData
-  , whitePhase
+  ( whitePhase
   , flickerPhase
   , whiteFrequency
   , flickerFrequency
@@ -17,7 +14,6 @@ import TauSigma.Util.Pipes.Noise
   , toPhase
   , octaves
   )
-import TauSigma.Util.Vector (takeVector)
 
 import Test.Hspec
 
