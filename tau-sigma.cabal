@@ -25,6 +25,7 @@ library
                      , TauSigma.Statistics.Hadamard
                      , TauSigma.Statistics.Theo1
                      , TauSigma.Statistics.Total
+                     , TauSigma.Statistics.Util
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
                      , TauSigma.Util.Pipes.Noise
