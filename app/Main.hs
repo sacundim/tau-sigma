@@ -71,6 +71,9 @@ options =
   , command "hdev"
       (info (HDEV <$> ADEV.options)
        (progDesc "Compute Hadamard deviation"))
+  , command "totdev"
+      (info (TOTDEV <$> ADEV.options)
+       (progDesc "Compute TOTDEV"))
   , command "theobr"
       (info (TheoBR <$> ADEV.options)
        (progDesc "Compute TheoBR deviation"))
