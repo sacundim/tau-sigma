@@ -38,13 +38,6 @@ spec = do
       it "tau = 1" $ totdev 1 1 `shouldBeAbout` 91.22945
       it "tau = 2" $ totdev 1 2 `shouldBeAbout` 93.90379
 
-    describe "Modified Total Deviation" $ do
-      it "tau = 1" $ pendingWith (show 75.50203)
-      it "tau = 2" $ pendingWith (show 75.83606)
-
-    describe "Time Total Deviation" $ do
-      it "tau = 1" $ pendingWith (show 43.59112)
-      it "tau = 2" $ pendingWith (show 87.56794)
   where shouldBeAbout = comparison nbsData 5.0e-5
 
 

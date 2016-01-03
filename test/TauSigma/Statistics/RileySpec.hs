@@ -47,15 +47,6 @@ spec = do
       it "tau = 10"  $ totdev 1  10 `shouldBeAbout` 9.134743e-02
       it "tau = 100" $ totdev 1 100 `shouldBeAbout` 3.406530e-02
 
-    describe "Modified Total Deviation" $ do
-      it "tau = 1"   $ pendingWith (show 2.418528e-01)
-      it "tau = 10"  $ pendingWith (show 6.499161e-02)
-      it "tau = 100" $ pendingWith (show 2.287774e-02)
-
-    describe "Time Total Deviation" $ do
-      it "tau = 1"   $ pendingWith (show 1.396338e-01)
-      it "tau = 10"  $ pendingWith (show 3.752293e-01)
-      it "tau = 100" $ pendingWith (show 1.320847e-00)
   where shouldBeAbout = comparison rileyData 5.0e-7
 
 
