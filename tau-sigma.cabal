@@ -45,12 +45,10 @@ library
                      , mwc-random-monad
                      , monad-primitive
                      , optparse-applicative 
-                     , parallel
                      , pipes 
                      , pipes-bytestring
                      , pipes-csv
                      , primitive
-                     , random
                      , tagged
                      , transformers
                      , vector
