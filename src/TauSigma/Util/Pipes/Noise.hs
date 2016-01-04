@@ -6,12 +6,14 @@ module TauSigma.Util.Pipes.Noise
     , brown
     , flicker
     , octaves
+    , sinusoid
 
     , whitePhase
     , flickerPhase
     , whiteFrequency
     , flickerFrequency
     , randomWalkFrequency
+    , tourbillonFrequency
 
     , TimeData
     , FreqData
@@ -61,6 +63,16 @@ flicker octaves n = zipSum (map go [0..octaves])
 octaves :: Int -> Int
 octaves size = floor $ logBase 2 (fromIntegral size)
 
+-- | Generate a unit sinusoid signal with the given period.
+sinusoid :: (Monad m, Floating a) => Int -> a -> Producer a m r
+sinusoid period level = cycle period >-> P.map step
+  where period' = 2*pi / fromIntegral period 
+        step i = level * sin (fromIntegral i * period')
+        cycle period = go 0
+          where go i = yield (i `rem` period) >> go (succ i)
+
+
+
 whitePhase :: MonadPrim m => Double -> Producer (TimeData Double) (Rand m) ()
 whitePhase n = white n >-> P.map Tagged
 
@@ -80,6 +92,11 @@ flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 randomWalkFrequency
   :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
 randomWalkFrequency n = brown n >-> P.map Tagged
+
+tourbillonFrequency
+  :: Monad m => Int -> Double -> Producer (FreqData Double) m ()
+tourbillonFrequency period n = sinusoid period n >-> P.map Tagged
+
 
 -- | Convert a sequence of frequency points to phase points.
 toPhase :: (Monad m, Num a) => Pipe (FreqData a) (TimeData a) m r
@@ -116,7 +133,6 @@ differentiate = await >>= differentiate'
       cur <- await
       yield (cur - prev)
       differentiate' cur
-
 
 
 instance PrimMonad m => PrimMonad (Rand m) where
