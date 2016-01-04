@@ -88,7 +88,7 @@ Benchmark bench
   Type:                exitcode-stdio-1.0
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      bench
-  Ghc-Options:         -Wall -O -with-rtsopts=-A256m
+  Ghc-Options:         -Wall -O -with-rtsopts=-A256m -rtsopts -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , containers
