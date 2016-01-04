@@ -89,11 +89,14 @@ options = Options <$> length <*> frequency <*> mix
                      `with` [ long "tourbillon-period"
                             , metavar "N"
                             , value Nothing
+                            , help "Simulate a tourbillon with period of N."
                             ]
             level = Compose $ option (fmap Just auto)
                     `with` [ long "tourbillon-level"
                            , metavar "N"
                            , value (Just 1.0)
+                            , help $ "Tourbillon effect intensity level.  "
+                                  ++ "Default: 1.0"
                            ]
                   
                   
