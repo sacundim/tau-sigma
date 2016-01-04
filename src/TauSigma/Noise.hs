@@ -16,6 +16,8 @@ import Control.Lens
 -- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
 import Control.Monad.Primitive.Class (MonadPrim)
 
+import Data.Functor.Compose (Compose(..))
+
 import Data.Csv (Only(..))
 import Data.Default
 import Data.Maybe (catMaybes)
@@ -34,51 +36,67 @@ import TauSigma.Types
 import TauSigma.Util.Pipes.Noise
 
 options :: Parser Options
-options = Options
-      <$> option auto
-          ( long "length"
-         <> short 'n'
-         <> metavar "N"
-         <> value 1000
-         <> help "Generate N data points. Default: 1000"
-          )
-      <*> flag Phase Frequency
-          ( long "frequency"
-         <> help "Output as frequency data instead of phase"
-          )
-       <*> ( Mix
-         <$> option (fmap Just auto)
-             ( long "wpm"
-            <> metavar "N"
-            <> value Nothing
-            <> help "White phase noise intensity"
-             )
-         <*> option (fmap Just auto)
-             ( long "fpm"
-            <> metavar "N"
-            <> value Nothing
-            <> help "Flicker phase noise intensity"
-             )
-         <*> option (fmap Just auto)
-             ( long "wfm"
-            <> metavar "N"
-            <> value Nothing
-            <> help "White frequency noise intensity"
-             )
-         <*> option (fmap Just auto)
-             ( long "ffm"
-            <> metavar "N"
-            <> value Nothing
-            <> help "Flicker frequency noise intensity"
-             )
-         <*> option (fmap Just auto)
-             ( long "rwfm"
-            <> metavar "N"
-            <> value Nothing
-            <> help "Random walk frequency noise intensity"
-             )
-           )
-         
+options = Options <$> length <*> frequency <*> mix
+  where
+    f `with` xs = f (mconcat xs)
+    length = option auto
+             `with` [ long "length"
+                    , short 'n'
+                    , metavar "N"
+                    , value 1000
+                    , help "Generate N data points. Default: 1000"
+                    ]
+    frequency = flag Phase Frequency `with`
+                [ long "frequency"
+                , help "Output as frequency data instead of phase"
+                ]
+    mix = Mix <$> wpm <*> fpm <*> wfm <*> ffm <*> rwfm <*> getCompose tourbillon
+      where
+        wpm = option (fmap Just auto)
+              `with` [ long "wpm"
+                     , metavar "N"
+                     , value Nothing
+                     , help "White phase noise intensity"
+                     ]
+        fpm = option (fmap Just auto) 
+              `with` [ long "fpm"
+                     , metavar "N"
+                     , value Nothing
+                     , help "Flicker phase noise intensity"
+                     ]
+        wfm = option (fmap Just auto)
+              `with` [ long "wfm"
+                     , metavar "N"
+                     , value Nothing
+                     , help "White frequency noise intensity"
+                     ]
+        ffm = option (fmap Just auto)
+              `with` [ long "ffm"
+                     , metavar "N"
+                     , value Nothing
+                     , help "Flicker frequency noise intensity"
+                     ]
+        rwfm = option (fmap Just auto)
+               `with` [ long "rwfm"
+                      , metavar "N"
+                      , value Nothing
+                      , help "Random walk frequency noise intensity"
+                      ]
+        tourbillon :: Compose Parser Maybe (Int, Double)
+        tourbillon = (,) <$> period <*> level
+          where
+            period = Compose $ option (fmap Just auto)
+                     `with` [ long "tourbillon-period"
+                            , metavar "N"
+                            , value Nothing
+                            ]
+            level = Compose $ option (fmap Just auto)
+                    `with` [ long "tourbillon-level"
+                           , metavar "N"
+                           , value (Just 1.0)
+                           ]
+                  
+                  
 data Options =
   Options { _howMany :: Int
           , _outputType :: Domain
@@ -97,10 +115,12 @@ data Mix =
       , _ffm  :: Maybe Double
         -- | Random walk frequency noise level.
       , _rwfm :: Maybe Double
+        -- | Tourbillon period and intensity.
+      , _tourbillon :: Maybe (Int, Double)
       }
 
 instance Default Mix where
-  def = Mix Nothing Nothing (Just 1.0) Nothing Nothing
+  def = Mix Nothing Nothing (Just 1.0) Nothing Nothing Nothing
 
 $(makeLenses ''Options)
 $(makeLenses ''Mix)
@@ -118,7 +138,7 @@ main opts =
 
 applyDefaults :: Options -> Options
 applyDefaults opts = over mix go opts
-  where go (Mix Nothing Nothing Nothing Nothing Nothing) = def
+  where go (Mix Nothing Nothing Nothing Nothing Nothing Nothing) = def
         go other = other
 
 --- | Handle the output type option.
@@ -133,9 +153,13 @@ mixed opts =
                      , auxF whiteFrequency wfm 
                      , auxF (flickerFrequency (octaves size)) ffm 
                      , auxF randomWalkFrequency rwfm 
+                     , tourby
                      ]
   where auxT f g = f <$> view (mix . g) opts
         auxF f g = fmap (>-> toPhase) (auxT f g)
         size = view howMany opts
+        tourby = (>-> toPhase)
+             <$> uncurry tourbillonFrequency
+             <$> view (mix . tourbillon) opts
         
 
