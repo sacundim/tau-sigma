@@ -32,12 +32,6 @@ xs !* i
   | otherwise       = let j = V.length xs - (i `mod` V.length xs) - 2
                       in 2*(V.last xs) - xs!j
 
-{-
-xs !* i
-  | i < 0 = 2*xs!0 - xs!(-i)
-  | V.length xs <= i = 2*(V.last xs) - xs!(V.length xs - i)
-  | otherwise = xs!i
--}
 infixl 9 !*
 
 -- | TOTVAR estimator at one sampling interval.
