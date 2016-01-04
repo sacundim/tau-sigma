@@ -44,16 +44,6 @@ drainToMStream = unfoldrM gen
            Left _ -> Nothing
            Right x -> Just x
 
-{-
-  Stream go producer Unknown
-  where
-    go s = do
-      state <- next s
-      return (step state)
-    step :: Either r (a, Producer a m r) -> Step (Producer a m r) a
-    step (Left _) = Done
-    step (Right (a, k)) = Yield a k
--}
 
 takeVector :: (PrimMonad m, G.Vector v a) => Int -> Producer a m () -> m (v a)
 {-# INLINE takeVector #-}
