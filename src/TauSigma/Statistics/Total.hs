@@ -19,6 +19,7 @@ module TauSigma.Statistics.Total
 import Data.IntMap.Lazy (IntMap)
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
+import qualified Data.Vector.Unboxed as U
 
 import TauSigma.Statistics.Util
 
@@ -36,6 +37,7 @@ infixl 9 !*
 
 -- | TOTVAR estimator at one sampling interval.
 totvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE totvar #-}
 totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / fromIntegral divisor
   where divisor :: Integer
         divisor = 2 * m'^2 * tau0'^2 * (len - 2)
@@ -47,6 +49,7 @@ totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / fromIntegral divisor
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
 totdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE totdev#-}
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
@@ -54,6 +57,7 @@ totdev tau0 m xs = sqrt (totvar tau0 m xs)
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 totvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE totvars #-}
 totvars tau0 xs = allTaus [1..maxTaus] (totvar tau0) xs
   where maxTaus = V.length xs - 2
                     
@@ -62,6 +66,7 @@ totvars tau0 xs = allTaus [1..maxTaus] (totvar tau0) xs
 -- input vector.  You're going to want to force the ones you want
 -- right away and discard the map!
 totdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE totdevs #-}
 totdevs tau0 xs = allTaus [1..maxTaus] (totdev tau0) xs
   where maxTaus = V.length xs - 1
 

@@ -20,6 +20,7 @@ import TauSigma.Statistics.Util
 
 -- | Overlapped estimator of Hadamard variance at one sampling interval.
 hvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE hvar #-}
 hvar tau0 m xs = sumsq 0 (V.length xs - 3*m) term / fromIntegral divisor
   where divisor :: Integer
         divisor = 6 * m'^2 * tau0'^2 * (len - 3*m')
@@ -30,6 +31,7 @@ hvar tau0 m xs = sumsq 0 (V.length xs - 3*m) term / fromIntegral divisor
 
 -- | Overlapped estimator of Hadamard deviation at one sampling interval.
 hdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE hdev #-}
 hdev tau0 m xs = sqrt (hvar tau0 m xs)
 
 -- | Overlapped estimator of Hadamard variance at all sampling intervals.
@@ -37,6 +39,7 @@ hdev tau0 m xs = sqrt (hvar tau0 m xs)
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 hvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE hvars #-}
 hvars tau0 xs = allTaus [1..maxTaus] (hvar tau0) xs
   where maxTaus = (V.length xs - 1) `div` 3
                     
@@ -45,5 +48,6 @@ hvars tau0 xs = allTaus [1..maxTaus] (hvar tau0) xs
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 hdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE hdevs #-}
 hdevs tau0 xs = allTaus [1..maxTaus] (hdev tau0) xs
   where maxTaus = (V.length xs - 1) `div` 3

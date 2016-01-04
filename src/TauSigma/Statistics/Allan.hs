@@ -30,6 +30,7 @@ import TauSigma.Statistics.Util
 
 -- | Overlapped estimator of Allan variance at one sampling interval.
 avar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE avar #-}
 avar tau0 m xs = sumsq 0 (V.length xs - 2*m) term / fromIntegral divisor
   where divisor :: Integer
         divisor = 2 * m'^2 * tau0'^2 * (len - 2*m')
@@ -40,6 +41,7 @@ avar tau0 m xs = sumsq 0 (V.length xs - 2*m) term / fromIntegral divisor
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
 adev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE adev #-}
 adev tau0 m xs = sqrt (avar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
@@ -47,6 +49,7 @@ adev tau0 m xs = sqrt (avar tau0 m xs)
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
 avars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE avars #-}
 avars tau0 xs = allTaus [1..maxTaus] (avar tau0) xs
   where maxTaus = (V.length xs - 1) `div` 2
                     
@@ -55,12 +58,15 @@ avars tau0 xs = allTaus [1..maxTaus] (avar tau0) xs
 -- input vector.  You're going to want to force the ones you want
 -- right away and discard the map!
 adevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE adevs #-}
 adevs tau0 xs = allTaus [1..maxTaus] (adev tau0) xs
   where maxTaus = (V.length xs - 1) `div` 2
 
 
 -- | Estimator of Modified Allan variance at one sampling interval.
 mvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE mvar #-}
+{- FIXME: slow... -}
 mvar tau0 m xs = outer / fromIntegral divisor
   where
     -- Whoah, I was using just 'Int' here and I was getting overflows
@@ -75,28 +81,35 @@ mvar tau0 m xs = outer / fromIntegral divisor
               where term i = xs!(i+2*m) - 2*(xs!(i+m)) + xs!i
 
 mdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE mdev #-}
 mdev tau0 m xs = sqrt (mvar tau0 m xs)
 
 mvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE mvars #-}
 mvars tau0 xs = allTaus [1..maxTaus] (mvar tau0) xs
   where maxTaus = (V.length xs - 1) `div` 3
                     
 mdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE mdevs #-}
 mdevs tau0 xs = allTaus [1..maxTaus] (mdev tau0) xs
   where maxTaus = (V.length xs - 1) `div` 3
 
 
 
 tvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE tvar #-}
 tvar tau0 m xs = (fromIntegral (m*tau0)^2 / 3) * mvar tau0 m xs
 
 tdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+{-# INLINABLE tdev #-}
 tdev tau0 m xs = sqrt (tvar tau0 m xs)
 
 tvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE tvars #-}
 tvars tau0 xs = allTaus [1..maxTaus] (tvar tau0) xs
   where maxTaus = (V.length xs - 1) `div` 3
                     
 tdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE tdevs #-}
 tdevs tau0 xs = allTaus [1..maxTaus] (tdev tau0) xs
   where maxTaus = (V.length xs - 1) `div` 3
