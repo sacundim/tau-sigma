@@ -57,7 +57,7 @@ library
 executable tau-sigma
   default-language:    Haskell2010
   hs-source-dirs:      app
-  Ghc-Options:         -Wall -with-rtsopts=-A256m
+  Ghc-Options:         -Wall -O -with-rtsopts=-A256m
   main-is:             Main.hs
   build-depends:       base >=4.7 && <5
                      , mtl
@@ -70,7 +70,7 @@ Test-Suite spec
   Type:                exitcode-stdio-1.0
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      test
-  Ghc-Options:         -Wall -with-rtsopts=-A256m
+  Ghc-Options:         -Wall -O -with-rtsopts=-A256m
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
                      , containers
@@ -88,7 +88,7 @@ Benchmark bench
   Type:                exitcode-stdio-1.0
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      bench
-  Ghc-Options:         -Wall -with-rtsopts=-A256m
+  Ghc-Options:         -Wall -O -with-rtsopts=-A256m
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , containers
