@@ -42,8 +42,6 @@ import TauSigma.Util.CSV
 import TauSigma.Util.Vector
 
 
-type Statistic = U.Vector Double -> IntMap Double
-  
 data Options
   = Options { _tau0 :: Tau0
             , _maxTau :: Maybe Int
@@ -67,37 +65,47 @@ options = Options
 
 
 adev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-adev opts = run opts (adevs (view tau0 opts))
+adev = run adevs
 
 mdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-mdev opts = run opts (mdevs (view tau0 opts))
+mdev = run mdevs
 
 tdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-tdev opts = run opts (tdevs (view tau0 opts))
+tdev = run tdevs
 
 hdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-hdev opts = run opts (hdevs (view tau0 opts))
+hdev = run hdevs
 
 totdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-totdev opts = run opts (totdevs (view tau0 opts))
+totdev = run totdevs
 
 theoBRdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-theoBRdev opts = run opts (theoBRdevs (view tau0 opts))
+theoBRdev = run theoBRdevs
 
+type Statistic = Tau0 -> U.Vector Double -> IntMap Double
 
-run :: (PrimMonad m, MonadIO m) => Options -> Statistic -> ExceptT String m ()
-run opts statistic = do
+run :: (PrimMonad m, MonadIO m) =>
+       Statistic
+    -> Options
+    -> ExceptT String m ()
+run statistic opts = do
   errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ (each $ tauSigma opts statistic errors)
+  runEffect $ tauSigma opts statistic errors
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
 
-tauSigma :: Options -> Statistic -> U.Vector Double -> [TauSigma]
-tauSigma opts statistic xs = map toTauSigma truncated
-  where
-    -- Note: the `TauSigma` constructor is strict in all its fields
-    toTauSigma (tau, sigma) = TauSigma tau sigma
-    truncated = takeWhile below (IntMap.toAscList (statistic xs))
-      where below (tau, _) = tau <= max
-            max = fromMaybe def (view maxTau opts)
-              where def = (U.length xs - 1) `div` 5
+
+tauSigma
+  :: Monad m =>
+     Options
+  -> Statistic
+  -> U.Vector Double
+  -> Producer TauSigma m ()
+tauSigma opts statistic xs = each (IntMap.toAscList result)
+                         >-> P.takeWhile (below (view maxTau opts))
+                         >-> P.map toTauSigma
+  where result = statistic (view tau0 opts) xs
+        below Nothing (tau, _) = tau <= 100
+        below (Just max) (tau, _) = tau <= max
+        toTauSigma (tau, sigma) = TauSigma tau sigma
+  
