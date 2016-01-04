@@ -3,5 +3,7 @@
 cabal.sandbox.config
 .DS_Store
 dist
+.idea/
+*.iml
 .stack-work/
 TAGS
