@@ -1,15 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module TauSigma.ADEV
-       ( Options
+       ( Statistic(..)
+       , Options
        , options
-       , adev
-       , mdev
-       , tdev
-       , hdev
-       , totdev
-       , theoBRdev
+       , main
        ) where
 
 import Control.Monad.Primitive (PrimMonad)
@@ -39,15 +37,19 @@ import TauSigma.Statistics.Util (Tau0)
 import TauSigma.Util.CSV
 import TauSigma.Util.DenseIntMap (UIntMap)
 import qualified TauSigma.Util.DenseIntMap as IntMap
-import TauSigma.Util.Vector
+import TauSigma.Util.Vector (drainToVector)
 
+
+data Statistic = ADEV | MDEV | TDEV | HDEV | TOTDEV | TheoBR
 
 data Options
   = Options { _tau0 :: Tau0
-            , _maxTau :: Maybe Int
+            , _maxTau :: Int
             }
 
 $(makeLenses ''Options)
+
+
 
 options :: Parser Options
 options = Options
@@ -56,56 +58,42 @@ options = Options
          <> metavar "N"
          <> help "Base sampling interval (default 1)"
           )
-      <*> option (fmap Just auto)
+      <*> option auto
           ( long "max-tau"
          <> metavar "N"
-         <> value Nothing
+         <> value 100
          <> help "Maximum multiple of sampling intervals to output."
           )
 
 
-adev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-adev = run adevs
-
-mdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-mdev = run mdevs
-
-tdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-tdev = run tdevs
-
-hdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-hdev = run hdevs
-
-totdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-totdev = run totdevs
-
-theoBRdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-theoBRdev = run theoBRdevs
-
-type Statistic = Tau0 -> U.Vector Double -> UIntMap Double
-
-run :: (PrimMonad m, MonadIO m) =>
-       Statistic
-    -> Options
-    -> ExceptT String m ()
-run statistic opts = do
+main :: (PrimMonad m, MonadIO m) =>
+        Statistic
+     -> Options
+     -> ExceptT String m ()
+main statistic opts = do
   errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ tauSigma opts statistic errors
+  runEffect $ dispatch statistic (view tau0 opts) (view maxTau opts) errors
+          >-> P.map (uncurry TauSigma)
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
 
-
-tauSigma
-  :: Monad m =>
-     Options
-  -> Statistic
+dispatch
+  :: forall m. Monad m =>
+     Statistic
+  -> Tau0
+  -> Int
   -> U.Vector Double
-  -> Producer TauSigma m ()
-tauSigma opts statistic xs = each (IntMap.toSparseList result)
-                         >-> P.takeWhile (below (view maxTau opts))
-                         >-> P.map toTauSigma
-  where result = statistic (view tau0 opts) xs
-        below Nothing (tau, _) = tau <= 100
-        below (Just max) (tau, _) = tau <= max
-        toTauSigma (tau, sigma) = TauSigma tau sigma
-  
+  -> Producer (Int, Double) m ()
+dispatch ADEV tau0 maxTau xs =
+  IntMap.ieach (IntMap.takeBelow maxTau (adevs tau0 xs)) 
+dispatch MDEV tau0 maxTau xs =
+  IntMap.ieach (IntMap.takeBelow maxTau (mdevs tau0 xs))
+dispatch TDEV tau0 maxTau xs =
+  IntMap.ieach (IntMap.takeBelow maxTau (tdevs tau0 xs))
+dispatch HDEV tau0 maxTau xs =
+  IntMap.ieach (IntMap.takeBelow maxTau (hdevs tau0 xs))
+dispatch TOTDEV tau0 maxTau xs =
+  IntMap.ieach (IntMap.takeBelow maxTau (totdevs tau0 xs))
+dispatch TheoBR tau0 maxTau xs =
+  IntMap.ieach (IntMap.takeBelow maxTau (theoBRdevs tau0 xs))
+

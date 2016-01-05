@@ -2,7 +2,9 @@
 
 -- | Utilities for working with 'Vector's.  Mostly generation from pipes.
 module TauSigma.Util.Vector
-       ( drainToVector
+       ( each
+       , ieach
+       , drainToVector
        , drainToMVector
        , drainToMStream
        , takeVector
@@ -17,8 +19,20 @@ import qualified Data.Vector.Generic.Mutable as M
 import Data.Vector.Fusion.Stream.Monadic (Stream(..), unfoldrM, sized)
 import Data.Vector.Fusion.Stream.Size (Size(..))
 
-import Pipes (Producer, next, (>->))
+import Pipes (Producer, yield, next, (>->))
 import qualified Pipes.Prelude as P
+
+-- | Like @each@ from "Pipes" but tied to the 'Vector' class
+-- instead of @Foldable@.  So works on, e.g., unboxed vectors.
+each :: (Monad m, G.Vector v a) => v a -> Producer a m ()
+{-# INLINE each #-}
+each = G.foldr go (return ())
+  where go a as = yield a >> as
+
+ieach :: (Monad m, G.Vector v a) => v a -> Producer (Int, a) m ()
+{-# INLINE ieach #-}
+ieach = G.ifoldr go (return ())
+  where go i a as = yield (i, a) >> as
 
 
 -- | Construct a vector from a 'Producer'.  The producer will be
@@ -64,3 +78,5 @@ takeMVector n producer = M.munstream (takeMStream n producer)
 takeMStream :: Monad m => Int -> Producer a m () -> Stream m a
 {-# INLINE takeMStream #-}
 takeMStream n producer = drainToMStream (producer >-> P.take n) `sized` Max n
+
+

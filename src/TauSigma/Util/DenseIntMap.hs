@@ -22,6 +22,8 @@ module TauSigma.Util.DenseIntMap
        , map
        , mapWithKey
        , filterWithKey
+       , takeBelow
+       , ieach
          
        , fromDenseList
        , fromDenseVector
@@ -52,6 +54,11 @@ import qualified Data.Vector.Unboxed as U
 import Data.Vector.Fusion.Stream (Stream)
 import qualified Data.Vector.Fusion.Stream as Stream
 
+import Pipes (Producer, (>->))
+import qualified Pipes.Prelude as Pipes
+
+import qualified TauSigma.Util.Vector as VectorUtil
+
 
 newtype DenseIntMap v a = DenseIntMap { entries :: v (Entry a) }
 
@@ -68,15 +75,18 @@ instance (NFData (v (Entry a))) =>
 data Entry a = Entry !Bool a
              deriving (Generic, NFData)
 
-type IntMap a = DenseIntMap V.Vector a
-type UIntMap a = DenseIntMap U.Vector a
-
-
-
 -- We use the default entry to indicate absence.  Dumb hack, but it
 -- does allow us below to provide an 'Unbox' instance.
 instance Default a => Default (Entry a) where
   def = Entry False def
+
+type IntMap a = DenseIntMap V.Vector a
+type UIntMap a = DenseIntMap U.Vector a
+
+-- | Take all elements whose key is below the given @n@.
+takeBelow :: Vector v (Entry a) => Int -> DenseIntMap v a -> DenseIntMap v a
+{-# INLINE takeBelow #-}
+takeBelow n (DenseIntMap as) = DenseIntMap (G.take n as)
 
 
 toEntry :: Default a => Maybe a -> Entry a
@@ -197,6 +207,14 @@ toSparseStream = Stream.map (\(i, Entry _ a) -> (i, a))
   where isSomething (_, Entry b _) = b
     
 
+-- | Pipe the key/value pairs.
+ieach :: (Monad m, Vector v (Entry a)) => 
+         DenseIntMap v a -> Producer (Int, a) m ()
+{-# INLINABLE ieach #-}
+ieach (DenseIntMap as) = VectorUtil.ieach as
+                     >-> Pipes.filter isSomething
+                     >-> Pipes.map (\(i, Entry _ a) -> (i, a))
+  where isSomething (_, Entry b _) = b
 
 --------------------------------------------------------------------
 --------------------------------------------------------------------
