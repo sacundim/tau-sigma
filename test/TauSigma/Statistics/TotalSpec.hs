@@ -9,7 +9,6 @@ import Pipes
 import TauSigma.Statistics.Total (totdevs, (!*))
 import TauSigma.Statistics.SlopeTest
 
-import TauSigma.Util.DenseIntMap (IntMap)
 import TauSigma.Util.Pipes.Noise
   ( whitePhase
   , flickerPhase

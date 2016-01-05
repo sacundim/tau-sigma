@@ -5,7 +5,6 @@ import Pipes
 import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.SlopeTest
 
-import TauSigma.Util.DenseIntMap (IntMap)
 import TauSigma.Util.Pipes.Noise
   ( whitePhase
   , flickerPhase
