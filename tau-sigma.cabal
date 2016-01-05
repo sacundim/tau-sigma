@@ -38,6 +38,7 @@ library
                      , bytestring 
                      , cassava 
                      , data-default 
+                     , deepseq
                      , filepath 
                      , lens 
                      , mtl 

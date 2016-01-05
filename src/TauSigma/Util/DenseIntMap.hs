@@ -1,5 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -29,6 +32,9 @@ module TauSigma.Util.DenseIntMap
 import Prelude hiding (lookup, map)
 import qualified Prelude as P
 
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData(..))
+
 import Data.Function (on)
 import Data.Default
 
@@ -36,8 +42,8 @@ import qualified Data.Foldable as F
 
 import qualified Data.Vector as V
 import Data.Vector.Generic (Vector, (!?))
-import qualified Data.Vector.Generic.Mutable as M
 import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Generic.Mutable as M
 import qualified Data.Vector.Unboxed as U
 import Data.Vector.Fusion.Stream (Stream)
 import qualified Data.Vector.Fusion.Stream as Stream
@@ -45,10 +51,16 @@ import qualified Data.Vector.Fusion.Stream as Stream
 
 newtype DenseIntMap v a = DenseIntMap (v (Entry a))
 
+instance (Vector v (Entry a), NFData (v (Entry a))) =>
+         NFData (DenseIntMap v a) where
+  rnf (DenseIntMap va) = rnf va
+
+data Entry a = Entry !Bool a
+             deriving (Generic, NFData)
+
 type IntMap a = DenseIntMap V.Vector a
 type UIntMap a = DenseIntMap U.Vector a
 
-data Entry a = Entry {-# UNPACK #-} !Bool a
 
 
 -- We use the default entry to indicate absence.  Dumb hack, but it

@@ -7,7 +7,6 @@ import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
 
-import Data.IntMap (IntMap)
 import Data.Tagged (Tagged(..))
 import qualified Data.Vector.Unboxed as U
 
@@ -20,6 +19,7 @@ import TauSigma.Statistics.Allan (adevs)
 import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
 
+import TauSigma.Util.DenseIntMap (IntMap)
 import TauSigma.Util.Pipes.Noise
   ( TimeData
   , whitePhase
