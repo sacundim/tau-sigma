@@ -20,8 +20,6 @@ import Control.Lens (view)
 import Control.Lens.TH
 
 import Data.Csv (HasHeader(..), fromOnly)
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
 import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
@@ -38,7 +36,10 @@ import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Total (totdevs)
 import TauSigma.Statistics.Theo1 (theoBRdevs)
 import TauSigma.Statistics.Util (Tau0)
+
 import TauSigma.Util.CSV
+import TauSigma.Util.DenseIntMap (IntMap, UIntMap)
+import qualified TauSigma.Util.DenseIntMap as IntMap
 import TauSigma.Util.Vector
 
 
@@ -101,7 +102,7 @@ tauSigma
   -> Statistic
   -> U.Vector Double
   -> Producer TauSigma m ()
-tauSigma opts statistic xs = each (IntMap.toAscList result)
+tauSigma opts statistic xs = each (IntMap.toSparseList result)
                          >-> P.takeWhile (below (view maxTau opts))
                          >-> P.map toTauSigma
   where result = statistic (view tau0 opts) xs

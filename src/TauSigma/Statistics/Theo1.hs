@@ -19,14 +19,15 @@ module TauSigma.Statistics.Theo1
        ) where
 
 import Data.Maybe (fromJust)
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
 import TauSigma.Statistics.Allan (avars)
-import TauSigma.Statistics.Util (Tau0, summation, allTaus)
+import TauSigma.Statistics.Util
+
+import TauSigma.Util.DenseIntMap (IntMap)
+import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
 theo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
@@ -42,12 +43,12 @@ theo1dev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
 {-# INLINABLE theo1dev #-}
 theo1dev tau0 m xs = fmap sqrt (theo1var tau0 m xs)
 
-theo1vars :: (Fractional a, Vector v a) => Tau0 -> v a -> IntMap a
+theo1vars :: (Fractional a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theo1vars #-}
 theo1vars tau0 xs =
   allTaus (theo1Taus (V.length xs)) (unsafeTheo1var tau0) xs
 
-theo1devs :: (Floating a, Vector v a) => Tau0 -> v a -> IntMap a
+theo1devs :: (Floating a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theo1devs #-}
 theo1devs tau0 xs = 
   allTaus (theo1Taus (V.length xs)) (unsafeTheo1dev tau0) xs
@@ -60,7 +61,9 @@ theo1Taus size = filter even [10..limit]
 -- | This is a worse than a partial function: it's a function that
 -- produces incorrect results for some of its arguments.  Stick to
 -- 'theo1vars' unless you really know what you're doing.
-unsafeTheo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+unsafeTheo1var
+  :: (Fractional a, Vector v a) =>
+     Tau0 -> Int -> v a -> a
 {-# INLINABLE unsafeTheo1var #-}
 unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
   where divisor :: Integer
@@ -75,26 +78,28 @@ unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
                                 term = (xs!i - xs!(i - d + halfM))
                                      + (xs!(i+m) -xs!(i + d + halfM))
 
-unsafeTheo1dev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+unsafeTheo1dev
+  :: (Floating a, Default a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE unsafeTheo1dev #-}
 unsafeTheo1dev tau0 m xs = sqrt (unsafeTheo1var tau0 m xs)
 
 -- | Bias-reduced Theo1 variance.  This computes 'avars' and
 -- 'theo1vars', so if you're doing that anyway you may wish to use
 -- 'toTheoBRvars' which reuses the memoized results of those two.
-theoBRvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+theoBRvars :: (RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theoBRvars #-}
 theoBRvars tau0 xs = toTheoBRvars (V.length xs) allans theo1s
   where allans = avars tau0 xs
         theo1s = theo1vars tau0 xs
 
-theoBRdevs :: (Floating a, RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+theoBRdevs
+  :: (Floating a, RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theoBRdevs #-}
 theoBRdevs tau0 xs = IntMap.map sqrt (theoBRvars tau0 xs)
 
 
 toTheoBRvars
-  :: forall a. RealFrac a =>
+  :: forall a. (RealFrac a, Default a) =>
      Int        -- ^ The length of the phase point data set
   -> IntMap a   -- ^ The 'avars' result
   -> IntMap a   -- ^ The 'theo1vars' result
@@ -128,7 +133,7 @@ toTheoBRvars size allans theo1s = IntMap.mapWithKey go theo1s
                         theTheo1 = unsafe (12 + 4*i) theo1s
 
 toTheoBRdevs
-  :: forall a. (Floating a, RealFrac a) =>
+  :: forall a. (Floating a, RealFrac a, Default a) =>
      Int        -- ^ The length of the phase point data set
   -> IntMap a   -- ^ The 'avars' result
   -> IntMap a   -- ^ The 'theo1vars' result

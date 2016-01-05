@@ -2,7 +2,6 @@
 
 module TauSigma.Statistics.TotalSpec where
 
-import Data.IntMap.Lazy (IntMap)
 import qualified Data.Vector.Unboxed as U
 
 import Pipes
@@ -10,6 +9,7 @@ import Pipes
 import TauSigma.Statistics.Total (totdevs, (!*))
 import TauSigma.Statistics.SlopeTest
 
+import TauSigma.Util.DenseIntMap (IntMap)
 import TauSigma.Util.Pipes.Noise
   ( whitePhase
   , flickerPhase

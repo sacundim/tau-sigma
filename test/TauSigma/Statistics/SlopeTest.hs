@@ -9,10 +9,8 @@ module TauSigma.Statistics.SlopeTest
        , slopeTest
        ) where
 
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
-
 import Data.Tagged
+import Data.Default
 import Data.Vector (Vector)
 
 import Pipes
@@ -22,6 +20,8 @@ import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import Text.Printf
 
+import TauSigma.Util.DenseIntMap (IntMap)
+import qualified TauSigma.Util.DenseIntMap as IntMap
 import TauSigma.Util.Pipes.Noise (TimeData)
 import TauSigma.Util.Vector (takeVector)
 
@@ -64,7 +64,7 @@ slopeTest TestCase {..} =
       failures `shouldBe` []
 
 
-filterKeys :: (Int, Int) -> IntMap a -> IntMap a
+filterKeys :: Default a => (Int, Int) -> IntMap a -> IntMap a
 filterKeys (lo,hi) = IntMap.filterWithKey go
   where go key _ = lo <= key && key <= hi 
 
@@ -73,7 +73,7 @@ type Point = (Int, Double)
 badSlopes :: Slope -> Error -> IntMap Double -> [(Int, Int, Slope, Error)]
 badSlopes standard tolerance graph =
   [ (x0, x1, round slope, round err)
-  | let points = IntMap.toList graph
+  | let points = IntMap.toSparseList graph
   , (p0@(x0, y0), p1@(x1, y1)) <- withSuccessors (,) points
   , let slope = logSlope (fromIntegral x0, y0) (fromIntegral x1, y1)
   , let err = abs (slope - standard)

@@ -6,13 +6,17 @@ module TauSigma.Statistics.Util
        , summation
        , sumsq
        , allTaus
+
+       , Default
        ) where
 
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
+import Data.Default (Default)
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
+
+import TauSigma.Util.DenseIntMap (IntMap)
+import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
 type Tau0 = Int
@@ -54,7 +58,8 @@ sumsq from to term
 
 
 -- | Auxiliary function to compute one statistic at all given taus
-allTaus :: Vector v a => [Tau0] -> (Tau0 -> v a -> a) -> v a -> IntMap a
+allTaus :: (Vector v a, Default a) =>
+           [Tau0] -> (Tau0 -> v a -> a) -> v a -> IntMap a
 {-# INLINE allTaus #-}
 allTaus taus statistic xs = IntMap.fromList (map step taus)
   where step m = (m, statistic m xs)

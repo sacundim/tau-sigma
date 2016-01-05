@@ -1,12 +1,11 @@
 module TauSigma.Statistics.Theo1Spec where
 
-import Data.IntMap.Lazy (IntMap)
-
 import Pipes
 
 import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
 import TauSigma.Statistics.SlopeTest
 
+import TauSigma.Util.DenseIntMap (IntMap)
 import TauSigma.Util.Pipes.Noise
   ( TimeData
   , whitePhase

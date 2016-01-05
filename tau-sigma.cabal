@@ -27,6 +27,7 @@ library
                      , TauSigma.Statistics.Total
                      , TauSigma.Statistics.Util
                      , TauSigma.Util.CSV
+                     , TauSigma.Util.DenseIntMap
                      , TauSigma.Util.Pipes
                      , TauSigma.Util.Pipes.Noise
                      , TauSigma.Util.Vector
@@ -36,7 +37,6 @@ library
                      , base >=4.7 && <5
                      , bytestring 
                      , cassava 
-                     , containers
                      , data-default 
                      , filepath 
                      , lens 
@@ -74,6 +74,7 @@ Test-Suite spec
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
                      , containers
+                     , data-default 
                      , hspec
                      , mwc-random
                      , mwc-random-monad
@@ -91,7 +92,6 @@ Benchmark bench
   Ghc-Options:         -Wall -O -rtsopts -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
-                     , containers
                      , criterion
                      , mwc-random
                      , mwc-random-monad

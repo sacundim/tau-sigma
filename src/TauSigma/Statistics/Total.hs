@@ -16,12 +16,14 @@ module TauSigma.Statistics.Total
        , totdevs
        ) where
 
-import Data.IntMap.Lazy (IntMap)
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 import qualified Data.Vector.Unboxed as U
 
 import TauSigma.Statistics.Util
+
+import TauSigma.Util.DenseIntMap (IntMap)
+import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
 -- | Extend a time error sequence by reflection around the ends.
@@ -56,7 +58,7 @@ totdev tau0 m xs = sqrt (totvar tau0 m xs)
 -- Note that this returns a lazy 'IntMap' whose thunks hold on to the
 -- input vector.  You're going to want to force the ones you want right
 -- away and discard the map!
-totvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+totvars :: (RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE totvars #-}
 totvars tau0 xs = allTaus [1..maxTaus] (totvar tau0) xs
   where maxTaus = V.length xs - 2
@@ -65,7 +67,7 @@ totvars tau0 xs = allTaus [1..maxTaus] (totvar tau0) xs
 -- Note that this returns a lazy 'IntMap' whose thunks hold on to the
 -- input vector.  You're going to want to force the ones you want
 -- right away and discard the map!
-totdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+totdevs :: (RealFloat a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE totdevs #-}
 totdevs tau0 xs = allTaus [1..maxTaus] (totdev tau0) xs
   where maxTaus = V.length xs - 1
