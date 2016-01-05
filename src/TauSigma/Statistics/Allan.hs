@@ -53,7 +53,7 @@ avars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
          Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE avars #-}
 avars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
-  where taus = V.length xs - 1 `div` 2
+  where taus = (V.length xs - 1) `div` 2
         go 0 = Entry False 0.0
         go m = Entry True (avar tau0 m xs)
 
@@ -89,7 +89,7 @@ mvars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
          Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE mvars #-}
 mvars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
-  where taus = V.length xs - 1 `div` 3
+  where taus = (V.length xs - 1) `div` 3
         go 0 = Entry False 0.0
         go m = Entry True (mvar tau0 m xs)
                     

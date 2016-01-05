@@ -58,7 +58,7 @@ newtype DenseIntMap v a = DenseIntMap { entries :: v (Entry a) }
 fromEntries :: v (Entry a) -> DenseIntMap v a
 fromEntries = DenseIntMap
 
-instance (Vector v (Entry a), NFData (v (Entry a))) =>
+instance (NFData (v (Entry a))) =>
          NFData (DenseIntMap v a) where
   rnf (DenseIntMap va) = rnf va
 

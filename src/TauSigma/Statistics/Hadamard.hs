@@ -46,7 +46,7 @@ hvars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
          Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE hvars #-}
 hvars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
-  where taus = V.length xs - 1 `div` 3
+  where taus = (V.length xs - 1) `div` 3
         go 0 = Entry False 0.0
         go m = Entry True (hvar tau0 m xs)
                     
