@@ -56,6 +56,7 @@ import qualified Data.Vector.Fusion.Stream as Stream
 newtype DenseIntMap v a = DenseIntMap { entries :: v (Entry a) }
 
 fromEntries :: v (Entry a) -> DenseIntMap v a
+{-# INLINABLE fromEntries #-}
 fromEntries = DenseIntMap
 
 instance (NFData (v (Entry a))) =>
@@ -111,6 +112,7 @@ mapWithKey f (DenseIntMap as) = DenseIntMap (G.imap f' as)
 filterWithKey
   :: (Vector v (Entry a), Default a) =>
      (Int -> a -> Bool) -> DenseIntMap v a -> DenseIntMap v a
+{-# INLINABLE filterWithKey #-}
 filterWithKey p (DenseIntMap as) = DenseIntMap (G.imap p' as)
   where p' _ e@(Entry False _) = e
         p' i e@(Entry True a) 
@@ -127,6 +129,7 @@ filterWithKey p (DenseIntMap as) = DenseIntMap (G.imap p' as)
 fromDenseList
   :: (Vector v (Entry a), Default a) =>
      [Maybe a] -> DenseIntMap v a
+{-# INLINABLE fromDenseList #-}
 fromDenseList as = DenseIntMap (G.fromList (P.map toEntry as))
 
 fromDenseVector
@@ -134,6 +137,7 @@ fromDenseVector
      , Vector v' (Entry a)
      , Default a) =>
      v (Maybe a) -> DenseIntMap v' a
+{-# INLINABLE fromDenseVector #-}
 fromDenseVector =
   DenseIntMap . G.unstream . Stream.map toEntry . G.stream
 
@@ -143,6 +147,7 @@ fromDenseVector =
 fromList
   :: (Foldable f, Vector v (Entry a), Default a) =>
      f (Int, a) -> DenseIntMap v a
+{-# INLINABLE fromList #-}
 fromList entries = DenseIntMap $ G.create $ do
   let (size, _) = F.maximumBy (compare `on` fst) entries
   result <- M.replicate (size+1) def
@@ -153,6 +158,7 @@ fromList entries = DenseIntMap $ G.create $ do
 fromSparseVector 
   :: (Vector v (Int, a), Vector v' (Entry a), Default a) =>
      v (Int, a) -> DenseIntMap v' a
+{-# INLINABLE fromSparseVector #-}
 fromSparseVector entries = DenseIntMap $ G.create $ do
   let (size, _) = G.maximumBy (compare `on` fst) entries
   result <- M.replicate size def
@@ -162,24 +168,29 @@ fromSparseVector entries = DenseIntMap $ G.create $ do
 
 
 toDenseList :: Vector v (Entry a) => DenseIntMap v a -> [Maybe a]
+{-# INLINABLE toDenseList #-}
 toDenseList (DenseIntMap as) = P.map fromEntry (G.toList as)
 
 toDenseVector
   :: (Vector v (Entry a), Vector v' (Maybe a)) =>
      DenseIntMap v a -> v' (Maybe a)
+{-# INLINABLE toDenseVector #-}
 toDenseVector (DenseIntMap as) =
   G.unstream (Stream.map fromEntry (G.stream as))
 
 
 toSparseList :: Vector v (Entry a) => DenseIntMap v a -> [(Int, a)]
+{-# INLINABLE toSparseList #-}
 toSparseList (DenseIntMap as) = Stream.toList (toSparseStream (G.stream as))
 
 toSparseVector
   :: (Vector v (Entry a), Vector v' (Int, a)) =>
      DenseIntMap v a -> v' (Int, a)
+{-# INLINABLE toSparseVector #-}
 toSparseVector (DenseIntMap as) = G.unstream (toSparseStream (G.stream as))
 
 toSparseStream :: Stream (Entry a) -> Stream (Int, a)
+{-# INLINABLE toSparseStream #-}
 toSparseStream = Stream.map (\(i, Entry _ a) -> (i, a))
                . Stream.filter isSomething
                . Stream.indexed
