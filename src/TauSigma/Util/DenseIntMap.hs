@@ -11,6 +11,10 @@
 -- So this is meant for mostly-dense 'Int'-keyed data sets.
 module TauSigma.Util.DenseIntMap
        ( DenseIntMap
+       , Entry(..)
+       , fromEntries
+       , entries
+         
        , IntMap
        , UIntMap
 
@@ -49,12 +53,17 @@ import Data.Vector.Fusion.Stream (Stream)
 import qualified Data.Vector.Fusion.Stream as Stream
 
 
-newtype DenseIntMap v a = DenseIntMap (v (Entry a))
+newtype DenseIntMap v a = DenseIntMap { entries :: v (Entry a) }
+
+fromEntries :: v (Entry a) -> DenseIntMap v a
+fromEntries = DenseIntMap
 
 instance (Vector v (Entry a), NFData (v (Entry a))) =>
          NFData (DenseIntMap v a) where
   rnf (DenseIntMap va) = rnf va
 
+-- | A raw entry in the 'DenseIntMap'.  You may need to stick this type into
+-- your constraints in many places.
 data Entry a = Entry !Bool a
              deriving (Generic, NFData)
 

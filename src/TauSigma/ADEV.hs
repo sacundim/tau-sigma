@@ -20,7 +20,6 @@ import Control.Lens (view)
 import Control.Lens.TH
 
 import Data.Csv (HasHeader(..), fromOnly)
-import Data.Maybe
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 
@@ -38,7 +37,7 @@ import TauSigma.Statistics.Theo1 (theoBRdevs)
 import TauSigma.Statistics.Util (Tau0)
 
 import TauSigma.Util.CSV
-import TauSigma.Util.DenseIntMap (IntMap, UIntMap)
+import TauSigma.Util.DenseIntMap (UIntMap)
 import qualified TauSigma.Util.DenseIntMap as IntMap
 import TauSigma.Util.Vector
 
@@ -83,7 +82,7 @@ totdev = run totdevs
 theoBRdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
 theoBRdev = run theoBRdevs
 
-type Statistic = Tau0 -> U.Vector Double -> IntMap Double
+type Statistic = Tau0 -> U.Vector Double -> UIntMap Double
 
 run :: (PrimMonad m, MonadIO m) =>
        Statistic

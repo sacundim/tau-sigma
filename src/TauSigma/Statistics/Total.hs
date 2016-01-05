@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 
 -- | Utility functions for the Total deviation family of functions.  See:
 --
@@ -16,13 +17,13 @@ module TauSigma.Statistics.Total
        , totdevs
        ) where
 
+import Data.Default (Default)
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
-import qualified Data.Vector.Unboxed as U
 
 import TauSigma.Statistics.Util
 
-import TauSigma.Util.DenseIntMap (IntMap)
+import TauSigma.Util.DenseIntMap (DenseIntMap, Entry(..))
 import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
@@ -55,21 +56,21 @@ totdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
--- Note that this returns a lazy 'IntMap' whose thunks hold on to the
--- input vector.  You're going to want to force the ones you want right
--- away and discard the map!
-totvars :: (RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+totvars
+  :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
+     Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE totvars #-}
-totvars tau0 xs = allTaus [1..maxTaus] (totvar tau0) xs
-  where maxTaus = V.length xs - 2
+totvars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
+  where taus = V.length xs - 2
+        go 0 = Entry False 0.0
+        go m = Entry True (totvar tau0 m xs)
+
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
--- Note that this returns a lazy 'IntMap' whose thunks hold on to the
--- input vector.  You're going to want to force the ones you want
--- right away and discard the map!
-totdevs :: (RealFloat a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+totdevs
+  :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
+     Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE totdevs #-}
-totdevs tau0 xs = allTaus [1..maxTaus] (totdev tau0) xs
-  where maxTaus = V.length xs - 1
+totdevs tau0 xs = IntMap.map sqrt (totvars tau0 xs)
 
 

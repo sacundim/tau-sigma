@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 
 module TauSigma.Statistics.Util
        ( Tau0
@@ -5,17 +6,12 @@ module TauSigma.Statistics.Util
        , differences
        , summation
        , sumsq
-       , allTaus
-
-       , Default
        ) where
-
-import Data.Default (Default)
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
 
-import TauSigma.Util.DenseIntMap (IntMap)
+import TauSigma.Util.DenseIntMap (DenseIntMap, Entry)
 import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
@@ -56,10 +52,3 @@ sumsq from to term
           | i < to    = go (subtotal + (term i)^2) (i+1)
           | otherwise = subtotal
 
-
--- | Auxiliary function to compute one statistic at all given taus
-allTaus :: (Vector v a, Default a) =>
-           [Tau0] -> (Tau0 -> v a -> a) -> v a -> IntMap a
-{-# INLINE allTaus #-}
-allTaus taus statistic xs = IntMap.fromList (map step taus)
-  where step m = (m, statistic m xs)

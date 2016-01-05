@@ -19,7 +19,7 @@ import TauSigma.Statistics.Allan (adevs)
 import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
 
-import TauSigma.Util.DenseIntMap (IntMap)
+import TauSigma.Util.DenseIntMap (DenseIntMap)
 import TauSigma.Util.Pipes.Noise
   ( TimeData
   , whitePhase
@@ -33,7 +33,7 @@ import TauSigma.Util.Pipes.Noise
 import TauSigma.Util.Vector
 
 
-type Statistic = U.Vector Double -> IntMap Double
+type Statistic = U.Vector Double -> DenseIntMap U.Vector Double
 type Noise m = Producer (TimeData Double) (Rand m) ()
 
 main :: IO ()

@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 -- | Allan variance and deviation estimators.  See:
 --
 -- * http://tf.nist.gov/general/pdf/2220.pdf
@@ -20,11 +22,14 @@ module TauSigma.Statistics.Allan
        , tdevs
        ) where
 
+import Data.Default (Default)
+
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
 import TauSigma.Statistics.Util
-import TauSigma.Util.DenseIntMap (IntMap)
+import TauSigma.Util.DenseIntMap (DenseIntMap, Entry(..))
+import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
 -- | Overlapped estimator of Allan variance at one sampling interval.
@@ -44,22 +49,19 @@ adev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 adev tau0 m xs = sqrt (avar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
--- Note that this returns a lazy 'IntMap' whose thunks hold on to the
--- input vector.  You're going to want to force the ones you want right
--- away and discard the map!
-avars :: (RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+avars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
+         Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE avars #-}
-avars tau0 xs = allTaus [1..maxTaus] (avar tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 2
-                    
+avars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
+  where taus = V.length xs - 1 `div` 2
+        go 0 = Entry False 0.0
+        go m = Entry True (avar tau0 m xs)
+
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
--- Note that this returns a lazy 'IntMap' whose thunks hold on to the
--- input vector.  You're going to want to force the ones you want
--- right away and discard the map!
-adevs :: (RealFloat a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+adevs :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
+         Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE adevs #-}
-adevs tau0 xs = allTaus [1..maxTaus] (adev tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 2
+adevs tau0 xs = IntMap.map sqrt (avars tau0 xs)
 
 
 -- | Estimator of Modified Allan variance at one sampling interval.
@@ -83,32 +85,39 @@ mdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE mdev #-}
 mdev tau0 m xs = sqrt (mvar tau0 m xs)
 
-mvars :: (RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+mvars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
+         Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE mvars #-}
-mvars tau0 xs = allTaus [1..maxTaus] (mvar tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 3
+mvars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
+  where taus = V.length xs - 1 `div` 3
+        go 0 = Entry False 0.0
+        go m = Entry True (mvar tau0 m xs)
                     
-mdevs :: (RealFloat a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+mdevs :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
+         Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE mdevs #-}
-mdevs tau0 xs = allTaus [1..maxTaus] (mdev tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 3
-
+mdevs tau0 xs = IntMap.map sqrt (mvars tau0 xs)
 
 
 tvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE tvar #-}
-tvar tau0 m xs = (fromIntegral (m*tau0)^2 / 3) * mvar tau0 m xs
+tvar tau0 m xs = mvar2tvar tau0 m (mvar tau0 m xs)
 
 tdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE tdev #-}
 tdev tau0 m xs = sqrt (tvar tau0 m xs)
 
-tvars :: (RealFrac a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+tvars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
+         Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE tvars #-}
-tvars tau0 xs = allTaus [1..maxTaus] (tvar tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 3
+tvars tau0 xs = IntMap.mapWithKey (mvar2tvar tau0) (avars tau0 xs)
                     
-tdevs :: (RealFloat a, Default a, Vector v a) => Tau0 -> v a -> IntMap a
+tdevs :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
+         Tau0 -> v a -> DenseIntMap v a
 {-# INLINABLE tdevs #-}
-tdevs tau0 xs = allTaus [1..maxTaus] (tdev tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 3
+tdevs tau0 xs = IntMap.map sqrt (tvars tau0 xs)
+
+mvar2tvar :: Fractional a => Tau0 -> Int -> a -> a
+{-# INLINE mvar2tvar #-}
+mvar2tvar tau0 m a = (fromIntegral (m*tau0)^2 / 3) * a
+
