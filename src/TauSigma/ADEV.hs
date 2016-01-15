@@ -54,18 +54,19 @@ $(makeLenses ''Options)
 
 
 options :: Parser Options
-options = Options
-      <$> option auto
-          ( long "tau0"
-         <> metavar "N"
-         <> help "Base sampling interval (default 1)"
-          )
-      <*> option auto
-          ( long "max-tau"
-         <> metavar "N"
-         <> value 100
-         <> help "Maximum multiple of sampling intervals to output."
-          )
+options = Options <$> tau0 <*> maxTau
+  where f `with` xs = f (mconcat xs)
+        tau0 = option auto
+               `with` [ long "tau0"
+                      , metavar "N"
+                      , help "Base sampling interval (default 1)"
+                      ]
+        maxTau = option auto
+                 `with` [ long "max-tau"
+                        , metavar "N"
+                        , value 100
+                        , help "Maximum multiple of tau0 to output."
+                        ]
 
 
 main :: (PrimMonad m, MonadIO m) =>

@@ -22,6 +22,24 @@ import TauSigma.Types
 import TauSigma.Util.CSV
 import TauSigma.Util.Pipes.Noise
 
+
+data Options =
+  Options { _input  :: Unit
+          , _output :: Unit
+          }
+
+-- | The units of the data points.  
+data Unit =
+  Unit {
+    -- | The domain of the data points (time or frequency)
+    _domain :: Domain
+
+    -- | The denominator of the data points.  E.g., if the data is in
+    -- seconds per day, this would be 86,400 (the number of seconds in
+    -- a standard day).
+    , _denominator   :: Double
+    }
+
 options :: Parser Options
 options = Options
           <$> ( Unit
@@ -53,22 +71,6 @@ options = Options
                     )
               )
 
-data Options =
-  Options { _input  :: Unit
-          , _output :: Unit
-          }
-
--- | The units of the data points.  
-data Unit =
-  Unit {
-    -- | The domain of the data points (time or frequency)
-    _domain :: Domain
-
-    -- | The denominator of the data points.  E.g., if the data is in
-    -- seconds per day, this would be 86,400 (the number of seconds in
-    -- a standard day).
-    , _denominator   :: Double
-    }
 
 main :: MonadIO m => Options -> ExceptT String m ()
 main (Options from to) =
