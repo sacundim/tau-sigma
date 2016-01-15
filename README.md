@@ -40,6 +40,17 @@ Flicker frequency modulation     | [FFM](images/ffm_phase.svg)   | [FFM](images/
 Random walk frequency modulation | [RWFM](images/rwfm_phase.svg) | [RWFM](images/rwfm_frequency.svg) | [RWFM](images/rwfm_adev.svg)
 
 
+
+### Earth Rotation, 1962-2015
+
+The rotation of our planet is not stable.  We can illustrate by
+applying `tau-sigma` to data from the
+[International Earth Rotation Service](http://www.iers.org/IERS/EN/Home/home_node.html):
+
+* [Stability of mean solar day](../images/earth-1960-2015.svg)
+
+
+
 ### Arnold #36 pocket chronometer
 
 I wrote this utilty to help me in my quest to understand the
