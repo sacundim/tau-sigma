@@ -27,33 +27,18 @@ not performance.
 
 ## Examples
 
+### Random Noise
+
 These examples are scripted in [`script/examples.sh`](script/examples.sh).
 
+Noise Type                       | Time errors                   | Frequency errors                  | ADEV
+---------------------------------|-------------------------------|-----------------------------------|------------------------------
+White phase modulation           | [WPM](images/wpm_phase.svg)   | [WPM](images/wpm_frequency.svg)   | [WPM](images/wpm_adev.svg)
+Flicker phase modulation         | [FPM](images/fpm_phase.svg)   | [FPM](images/fpm_frequency.svg)   | [FPM](images/fpm_adev.svg)
+White frequency modulation       | [WFM](images/wfm_phase.svg)   | [WFM](images/wfm_frequency.svg)   | [WFM](images/wfm_adev.svg)
+Flicker frequency modulation     | [FFM](images/ffm_phase.svg)   | [FFM](images/ffm_frequency.svg)   | [FFM](images/ffm_adev.svg)
+Random walk frequency modulation | [RWFM](images/rwfm_phase.svg) | [RWFM](images/rwfm_frequency.svg) | [RWFM](images/rwfm_adev.svg)
 
-### Time Domain
-
-* [White phase modulation](images/wpm_phase.svg)
-* [Flicker phase modulation](images/fpm_phase.svg)
-* [White frequency modulation](images/wfm_phase.svg)
-* [Flicker frequency modulation](images/ffm_phase.svg)
-* [Random walk frequency modulation](images/rwfm_frequency.svg)
-
-
-### Frequency Domain
-
-* [White phase modulation](images/wpm_frequency.svg)
-* [Flicker phase modulation](images/fpm_frequency.svg)
-* [White frequency modulation](images/wfm_frequency.svg)
-* [Flicker frequency modulation](images/ffm_frequency.svg)
-* [Random walk frequency modulation](images/rwfm_frequency.svg)
-
-
-### Allan deviation
-
-* [White phase modulation](images/wpm_adev.svg)
-* [White frequency modulation](images/wfm_adev.svg)
-* [Flicker frequency modulation](images/ffm_adev.svg)
-* [Random walk frequency modulation](images/rwfm_adev.svg)
 
 ### Arnold #36 pocket chronometer
 
