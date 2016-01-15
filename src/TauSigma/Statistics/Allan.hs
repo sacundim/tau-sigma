@@ -22,14 +22,13 @@ module TauSigma.Statistics.Allan
        , tdevs
        ) where
 
-import Data.Default (Default)
-
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
+
 import TauSigma.Statistics.Util
-import TauSigma.Util.DenseIntMap (DenseIntMap, Entry(..))
-import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
 -- | Overlapped estimator of Allan variance at one sampling interval.
@@ -49,17 +48,14 @@ adev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 adev tau0 m xs = sqrt (avar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
-avars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
-         Tau0 -> v a -> DenseIntMap v a
+avars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE avars #-}
-avars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
-  where taus = (V.length xs - 1) `div` 2
-        go 0 = Entry False 0.0
-        go m = Entry True (avar tau0 m xs)
+avars tau0 xs = IntMap.fromList (map go taus)
+  where taus = [1 .. (V.length xs - 1) `div` 2]
+        go m = (m, avar tau0 m xs)
 
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
-adevs :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
-         Tau0 -> v a -> DenseIntMap v a
+adevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE adevs #-}
 adevs tau0 xs = IntMap.map sqrt (avars tau0 xs)
 
@@ -85,16 +81,13 @@ mdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE mdev #-}
 mdev tau0 m xs = sqrt (mvar tau0 m xs)
 
-mvars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
-         Tau0 -> v a -> DenseIntMap v a
+mvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE mvars #-}
-mvars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
-  where taus = (V.length xs - 1) `div` 3
-        go 0 = Entry False 0.0
-        go m = Entry True (mvar tau0 m xs)
+mvars tau0 xs = IntMap.fromList (map go taus)
+  where taus = [1 .. (V.length xs - 1) `div` 3]
+        go m = (m, mvar tau0 m xs)
                     
-mdevs :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
-         Tau0 -> v a -> DenseIntMap v a
+mdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE mdevs #-}
 mdevs tau0 xs = IntMap.map sqrt (mvars tau0 xs)
 
@@ -107,13 +100,11 @@ tdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE tdev #-}
 tdev tau0 m xs = sqrt (tvar tau0 m xs)
 
-tvars :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
-         Tau0 -> v a -> DenseIntMap v a
+tvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE tvars #-}
 tvars tau0 xs = IntMap.mapWithKey (mvar2tvar tau0) (avars tau0 xs)
                     
-tdevs :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
-         Tau0 -> v a -> DenseIntMap v a
+tdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE tdevs #-}
 tdevs tau0 xs = IntMap.map sqrt (tvars tau0 xs)
 

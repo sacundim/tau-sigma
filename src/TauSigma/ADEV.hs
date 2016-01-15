@@ -18,8 +18,12 @@ import Control.Lens (view)
 import Control.Lens.TH
 
 import Data.Csv (HasHeader(..), fromOnly)
+
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import Options.Applicative hiding (header)
 
@@ -35,8 +39,6 @@ import TauSigma.Statistics.Theo1 (theoBRdevs)
 import TauSigma.Statistics.Util (Tau0)
 
 import TauSigma.Util.CSV
-import TauSigma.Util.DenseIntMap (UIntMap)
-import qualified TauSigma.Util.DenseIntMap as IntMap
 import TauSigma.Util.Vector (drainToVector)
 
 
@@ -72,28 +74,17 @@ main :: (PrimMonad m, MonadIO m) =>
      -> ExceptT String m ()
 main statistic opts = do
   errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ dispatch statistic (view tau0 opts) (view maxTau opts) errors
+  runEffect $ toProducer (dispatch statistic (view tau0 opts) errors)
+          >-> P.takeWhile (\(i, _) -> i <= (view maxTau opts))
           >-> P.map (uncurry TauSigma)
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
+    where toProducer = each . IntMap.toAscList
 
-dispatch
-  :: forall m. Monad m =>
-     Statistic
-  -> Tau0
-  -> Int
-  -> U.Vector Double
-  -> Producer (Int, Double) m ()
-dispatch ADEV tau0 maxTau xs =
-  IntMap.ieach (IntMap.takeBelow maxTau (adevs tau0 xs)) 
-dispatch MDEV tau0 maxTau xs =
-  IntMap.ieach (IntMap.takeBelow maxTau (mdevs tau0 xs))
-dispatch TDEV tau0 maxTau xs =
-  IntMap.ieach (IntMap.takeBelow maxTau (tdevs tau0 xs))
-dispatch HDEV tau0 maxTau xs =
-  IntMap.ieach (IntMap.takeBelow maxTau (hdevs tau0 xs))
-dispatch TOTDEV tau0 maxTau xs =
-  IntMap.ieach (IntMap.takeBelow maxTau (totdevs tau0 xs))
-dispatch TheoBR tau0 maxTau xs =
-  IntMap.ieach (IntMap.takeBelow maxTau (theoBRdevs tau0 xs))
-
+dispatch :: Statistic -> Tau0 -> U.Vector Double -> IntMap Double
+dispatch ADEV   = adevs 
+dispatch MDEV   = mdevs
+dispatch TDEV   = tdevs
+dispatch HDEV   = hdevs
+dispatch TOTDEV = totdevs
+dispatch TheoBR = theoBRdevs

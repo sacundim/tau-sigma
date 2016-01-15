@@ -17,14 +17,13 @@ module TauSigma.Statistics.Total
        , totdevs
        ) where
 
-import Data.Default (Default)
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
-import TauSigma.Statistics.Util
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
-import TauSigma.Util.DenseIntMap (DenseIntMap, Entry(..))
-import qualified TauSigma.Util.DenseIntMap as IntMap
+import TauSigma.Statistics.Util
 
 
 -- | Extend a time error sequence by reflection around the ends.
@@ -56,20 +55,15 @@ totdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
-totvars
-  :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
-     Tau0 -> v a -> DenseIntMap v a
+totvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE totvars #-}
-totvars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
-  where taus = V.length xs - 2
-        go 0 = Entry False 0.0
-        go m = Entry True (totvar tau0 m xs)
+totvars tau0 xs = IntMap.fromList (map go taus)
+  where taus = [1 .. V.length xs - 2]
+        go m = (m, totvar tau0 m xs)
 
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
-totdevs
-  :: (RealFloat a, Default a, Vector v a, Vector v (Entry a)) =>
-     Tau0 -> v a -> DenseIntMap v a
+totdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE totdevs #-}
 totdevs tau0 xs = IntMap.map sqrt (totvars tau0 xs)
 

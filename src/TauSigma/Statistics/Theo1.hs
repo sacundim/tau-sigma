@@ -21,15 +21,14 @@ module TauSigma.Statistics.Theo1
        , toTheoBRdevs
        ) where
 
-import Data.Default (Default)
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
+
 import TauSigma.Statistics.Allan (avars)
 import TauSigma.Statistics.Util
-
-import TauSigma.Util.DenseIntMap (DenseIntMap, Entry(..), entries)
-import qualified TauSigma.Util.DenseIntMap as IntMap
 
 
 -- | Theo1 is only defined for certain sampling intervals.
@@ -47,20 +46,14 @@ theo1dev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
 {-# INLINABLE theo1dev #-}
 theo1dev tau0 m xs = fmap sqrt (theo1var tau0 m xs)
 
-theo1vars
-  :: (Fractional a, Default a, Vector v a, Vector v (Entry a)) =>
-     Tau0 -> v a -> DenseIntMap v a
+theo1vars :: (Fractional a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theo1vars #-}
-theo1vars tau0 xs = IntMap.fromEntries (V.generate (taus + 1) go)
+theo1vars tau0 xs = IntMap.fromList (map go taus)
   where size = V.length xs
-        taus = 3 * (size `div` 4)
-        go m
-          | m `isTheo1Tau` size = Entry True (unsafeTheo1var tau0 m xs)
-          | otherwise           = Entry False 0.0
+        taus = filter (flip isTheo1Tau size) [1 .. 3 * (size `div` 4)]
+        go m = (m, unsafeTheo1var tau0 m xs)
 
-theo1devs
-  :: (Floating a, Default a, Vector v a, Vector v (Entry a)) =>
-     Tau0 -> v a -> DenseIntMap v a
+theo1devs :: (Floating a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theo1devs #-}
 theo1devs tau0 xs = IntMap.map sqrt (theo1vars tau0 xs)
 
@@ -68,9 +61,7 @@ theo1devs tau0 xs = IntMap.map sqrt (theo1vars tau0 xs)
 -- | This is a worse than a partial function: it's a function that
 -- produces incorrect results for some of its arguments.  Stick to
 -- 'theo1vars' unless you really know what you're doing.
-unsafeTheo1var
-  :: (Fractional a, Vector v a) =>
-     Tau0 -> Int -> v a -> a
+unsafeTheo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE unsafeTheo1var #-}
 unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
   where divisor :: Integer
@@ -85,35 +76,30 @@ unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
                                 term = (xs!i - xs!(i - d + halfM))
                                      + (xs!(i+m) -xs!(i + d + halfM))
 
-unsafeTheo1dev
-  :: (Floating a, Default a, Vector v a) => Tau0 -> Int -> v a -> a
+unsafeTheo1dev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 {-# INLINABLE unsafeTheo1dev #-}
 unsafeTheo1dev tau0 m xs = sqrt (unsafeTheo1var tau0 m xs)
 
 -- | Bias-reduced Theo1 variance.  This computes 'avars' and
 -- 'theo1vars', so if you're doing that anyway you may wish to use
 -- 'toTheoBRvars' which reuses the memoized results of those two.
-theoBRvars
-  :: (RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
-     Tau0 -> v a -> DenseIntMap v a
+theoBRvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theoBRvars #-}
 theoBRvars tau0 xs = toTheoBRvars (V.length xs) allans theo1s
   where allans = avars tau0 xs
         theo1s = theo1vars tau0 xs
 
-theoBRdevs
-  :: (Floating a, RealFrac a, Default a, Vector v a, Vector v (Entry a)) =>
-     Tau0 -> v a -> DenseIntMap v a
+theoBRdevs :: (Floating a, RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theoBRdevs #-}
 theoBRdevs tau0 xs = IntMap.map sqrt (theoBRvars tau0 xs)
 
 
 toTheoBRvars
-  :: forall v a. (RealFrac a, Default a, Vector v (Entry a)) =>
-     Int               -- ^ The length of the phase point data set
-  -> DenseIntMap v a   -- ^ The 'avars' result
-  -> DenseIntMap v a   -- ^ The 'theo1vars' result
-  -> DenseIntMap v a
+  :: forall v a. (RealFrac a) =>
+     Int        -- ^ The length of the phase point data set
+  -> IntMap a   -- ^ The 'avars' result
+  -> IntMap a   -- ^ The 'theo1vars' result
+  -> IntMap a
 {-# INLINABLE toTheoBRvars #-}
 toTheoBRvars size allans theo1s = IntMap.map go theo1s
   where go :: a -> a
@@ -134,21 +120,21 @@ toTheoBRvars size allans theo1s = IntMap.map go theo1s
         ratio = summation 0 (n+1) term
           where term :: Int -> a
                 term i = theAvar / theTheo1
-                  where unsafe :: Int -> DenseIntMap v a -> a
-                        unsafe k m = case entries m ! k of
-                                      Entry True v -> v
-                                      _ -> error "accessed bad entry"
+                  where unsafe :: Int -> IntMap a -> a
+                        unsafe k m = case IntMap.lookup k m of
+                                      Just v -> v
+                                      _ -> error "toTheoBRvars: bad index"
                         theAvar :: a
                         theAvar  = unsafe (9 + 3*i) allans
                         theTheo1 :: a
                         theTheo1 = unsafe (12 + 4*i) theo1s
 
 toTheoBRdevs
-  :: (Floating a, RealFrac a, Default a, Vector v (Entry a)) =>
-     Int               -- ^ The length of the phase point data set
-  -> DenseIntMap v a   -- ^ The 'avars' result
-  -> DenseIntMap v a   -- ^ The 'theo1vars' result
-  -> DenseIntMap v a
+  :: (Floating a, RealFrac a) =>
+     Int        -- ^ The length of the phase point data set
+  -> IntMap a   -- ^ The 'avars' result
+  -> IntMap a   -- ^ The 'theo1vars' result
+  -> IntMap a
 {-# INLINABLE toTheoBRdevs #-}
 toTheoBRdevs size allans theo1s =
   IntMap.map sqrt (toTheoBRvars size allans theo1s)

@@ -11,9 +11,6 @@ module TauSigma.Statistics.Util
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
 
-import TauSigma.Util.DenseIntMap (DenseIntMap, Entry)
-import qualified TauSigma.Util.DenseIntMap as IntMap
-
 import Text.Printf
 
 
