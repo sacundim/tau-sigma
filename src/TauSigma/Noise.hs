@@ -21,7 +21,7 @@ import Data.Functor.Compose (Compose(..))
 import Data.Csv (Only(..))
 import Data.Default
 import Data.Maybe (catMaybes)
-import Data.Monoid
+import Data.Monoid (mconcat)
 
 import Options.Applicative
 
@@ -34,6 +34,35 @@ import System.Random.MWC.Monad (Rand, runWithSystemRandomT)
 
 import TauSigma.Types
 import TauSigma.Util.Pipes.Noise
+
+data Options =
+  Options { _howMany :: Int
+          , _outputType :: Domain
+          , _mix :: Mix
+          }
+
+-- | The mix of noise types to generate.
+data Mix =
+  Mix { -- | White phase noise level.
+        _wpm  :: Maybe Double
+        -- | Flicker phase noise level.
+      , _fpm  :: Maybe Double
+        -- | White frequency noise level.
+      , _wfm  :: Maybe Double
+        -- | Flicker frequency noise level.
+      , _ffm  :: Maybe Double
+        -- | Random walk frequency noise level.
+      , _rwfm :: Maybe Double
+        -- | Tourbillon period and intensity.
+      , _tourbillon :: Maybe (Int, Double)
+      }
+
+instance Default Mix where
+  def = Mix Nothing Nothing (Just 1.0) Nothing Nothing Nothing
+
+$(makeLenses ''Options)
+$(makeLenses ''Mix)
+
 
 options :: Parser Options
 options = Options <$> length <*> frequency <*> mix
@@ -99,36 +128,6 @@ options = Options <$> length <*> frequency <*> mix
                                   ++ "Default: 1.0"
                            ]
                   
-                  
-data Options =
-  Options { _howMany :: Int
-          , _outputType :: Domain
-          , _mix :: Mix
-          }
-
--- | The mix of noise types to generate.
-data Mix =
-  Mix { -- | White phase noise level.
-        _wpm  :: Maybe Double
-        -- | Flicker phase noise level.
-      , _fpm  :: Maybe Double
-        -- | White frequency noise level.
-      , _wfm  :: Maybe Double
-        -- | Flicker frequency noise level.
-      , _ffm  :: Maybe Double
-        -- | Random walk frequency noise level.
-      , _rwfm :: Maybe Double
-        -- | Tourbillon period and intensity.
-      , _tourbillon :: Maybe (Int, Double)
-      }
-
-instance Default Mix where
-  def = Mix Nothing Nothing (Just 1.0) Nothing Nothing Nothing
-
-$(makeLenses ''Options)
-$(makeLenses ''Mix)
-
-
 
 main :: Options -> IO ()
 main opts =

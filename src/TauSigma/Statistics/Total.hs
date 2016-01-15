@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 
 -- | Utility functions for the Total deviation family of functions.  See:
 --
@@ -16,10 +17,11 @@ module TauSigma.Statistics.Total
        , totdevs
        ) where
 
-import Data.IntMap.Lazy (IntMap)
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
-import qualified Data.Vector.Unboxed as U
+
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import TauSigma.Statistics.Util
 
@@ -53,21 +55,16 @@ totdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
--- Note that this returns a lazy 'IntMap' whose thunks hold on to the
--- input vector.  You're going to want to force the ones you want right
--- away and discard the map!
 totvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE totvars #-}
-totvars tau0 xs = allTaus [1..maxTaus] (totvar tau0) xs
-  where maxTaus = V.length xs - 2
+totvars tau0 xs = IntMap.fromList (map go taus)
+  where taus = [1 .. V.length xs - 2]
+        go m = (m, totvar tau0 m xs)
+
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
--- Note that this returns a lazy 'IntMap' whose thunks hold on to the
--- input vector.  You're going to want to force the ones you want
--- right away and discard the map!
 totdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE totdevs #-}
-totdevs tau0 xs = allTaus [1..maxTaus] (totdev tau0) xs
-  where maxTaus = V.length xs - 1
+totdevs tau0 xs = IntMap.map sqrt (totvars tau0 xs)
 
 

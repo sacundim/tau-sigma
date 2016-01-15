@@ -1,5 +1,5 @@
 name:                tau-sigma
-version:             0.3.7
+version:             0.3.8
 synopsis:            A command-line utility for frequency stability analysis.
 license:             BSD3
 license-file:        LICENSE
@@ -38,6 +38,7 @@ library
                      , cassava 
                      , containers
                      , data-default 
+                     , deepseq
                      , filepath 
                      , lens 
                      , mtl 
@@ -74,6 +75,7 @@ Test-Suite spec
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
                      , containers
+                     , data-default 
                      , hspec
                      , mwc-random
                      , mwc-random-monad

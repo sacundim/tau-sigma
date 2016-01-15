@@ -1,7 +1,5 @@
 module TauSigma.Statistics.Theo1Spec where
 
-import Data.IntMap.Lazy (IntMap)
-
 import Pipes
 
 import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)

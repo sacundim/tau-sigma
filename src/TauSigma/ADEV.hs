@@ -1,15 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module TauSigma.ADEV
-       ( Options
+       ( Statistic(..)
+       , Options
        , options
-       , adev
-       , mdev
-       , tdev
-       , hdev
-       , totdev
-       , theoBRdev
+       , main
        ) where
 
 import Control.Monad.Primitive (PrimMonad)
@@ -20,11 +18,12 @@ import Control.Lens (view)
 import Control.Lens.TH
 
 import Data.Csv (HasHeader(..), fromOnly)
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
-import Data.Maybe
+
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import Options.Applicative hiding (header)
 
@@ -38,74 +37,55 @@ import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Total (totdevs)
 import TauSigma.Statistics.Theo1 (theoBRdevs)
 import TauSigma.Statistics.Util (Tau0)
-import TauSigma.Util.CSV
-import TauSigma.Util.Vector
 
+import TauSigma.Util.CSV
+import TauSigma.Util.Vector (drainToVector)
+
+
+data Statistic = ADEV | MDEV | TDEV | HDEV | TOTDEV | TheoBR
 
 data Options
   = Options { _tau0 :: Tau0
-            , _maxTau :: Maybe Int
+            , _maxTau :: Int
             }
 
 $(makeLenses ''Options)
 
+
+
 options :: Parser Options
-options = Options
-      <$> option auto
-          ( long "tau0"
-         <> metavar "N"
-         <> help "Base sampling interval (default 1)"
-          )
-      <*> option (fmap Just auto)
-          ( long "max-tau"
-         <> metavar "N"
-         <> value Nothing
-         <> help "Maximum multiple of sampling intervals to output."
-          )
+options = Options <$> tau0 <*> maxTau
+  where f `with` xs = f (mconcat xs)
+        tau0 = option auto
+               `with` [ long "tau0"
+                      , metavar "N"
+                      , help "Base sampling interval (default 1)"
+                      ]
+        maxTau = option auto
+                 `with` [ long "max-tau"
+                        , metavar "N"
+                        , value 100
+                        , help "Maximum multiple of tau0 to output."
+                        ]
 
 
-adev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-adev = run adevs
-
-mdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-mdev = run mdevs
-
-tdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-tdev = run tdevs
-
-hdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-hdev = run hdevs
-
-totdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-totdev = run totdevs
-
-theoBRdev :: (PrimMonad m, MonadIO m) => Options -> ExceptT String m ()
-theoBRdev = run theoBRdevs
-
-type Statistic = Tau0 -> U.Vector Double -> IntMap Double
-
-run :: (PrimMonad m, MonadIO m) =>
-       Statistic
-    -> Options
-    -> ExceptT String m ()
-run statistic opts = do
+main :: (PrimMonad m, MonadIO m) =>
+        Statistic
+     -> Options
+     -> ExceptT String m ()
+main statistic opts = do
   errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ tauSigma opts statistic errors
+  runEffect $ toProducer (dispatch statistic (view tau0 opts) errors)
+          >-> P.takeWhile (\(i, _) -> i <= (view maxTau opts))
+          >-> P.map (uncurry TauSigma)
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
+    where toProducer = each . IntMap.toAscList
 
-
-tauSigma
-  :: Monad m =>
-     Options
-  -> Statistic
-  -> U.Vector Double
-  -> Producer TauSigma m ()
-tauSigma opts statistic xs = each (IntMap.toAscList result)
-                         >-> P.takeWhile (below (view maxTau opts))
-                         >-> P.map toTauSigma
-  where result = statistic (view tau0 opts) xs
-        below Nothing (tau, _) = tau <= 100
-        below (Just max) (tau, _) = tau <= max
-        toTauSigma (tau, sigma) = TauSigma tau sigma
-  
+dispatch :: Statistic -> Tau0 -> U.Vector Double -> IntMap Double
+dispatch ADEV   = adevs 
+dispatch MDEV   = mdevs
+dispatch TDEV   = tdevs
+dispatch HDEV   = hdevs
+dispatch TOTDEV = totdevs
+dispatch TheoBR = theoBRdevs

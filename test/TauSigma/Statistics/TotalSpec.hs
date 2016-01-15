@@ -2,7 +2,6 @@
 
 module TauSigma.Statistics.TotalSpec where
 
-import Data.IntMap.Lazy (IntMap)
 import qualified Data.Vector.Unboxed as U
 
 import Pipes

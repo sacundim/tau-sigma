@@ -7,9 +7,10 @@ import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
 
-import Data.IntMap (IntMap)
 import Data.Tagged (Tagged(..))
 import qualified Data.Vector.Unboxed as U
+
+import Data.IntMap (IntMap)
 
 import Pipes
 import qualified Pipes.Prelude as P

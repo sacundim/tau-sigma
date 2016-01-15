@@ -36,12 +36,7 @@ main' opts = do
 
 
 data Options
-  = ADEV    ADEV.Options
-  | MDEV    ADEV.Options
-  | TDEV    ADEV.Options
-  | HDEV    ADEV.Options
-  | TOTDEV  ADEV.Options
-  | TheoBR  ADEV.Options
+  = ADEV    ADEV.Statistic ADEV.Options
   | LogLog  Chart.Options
   | Chart   Chart.Options
   | Convert Convert.Options
@@ -50,12 +45,7 @@ data Options
 
 
 dispatch :: Options -> ExceptT String IO ()
-dispatch (ADEV opts) = ADEV.adev opts
-dispatch (MDEV opts) = ADEV.mdev opts
-dispatch (TDEV opts) = ADEV.tdev opts
-dispatch (HDEV opts) = ADEV.hdev opts
-dispatch (TOTDEV opts) = ADEV.totdev opts
-dispatch (TheoBR opts) = ADEV.theoBRdev opts
+dispatch (ADEV statistic opts) = ADEV.main statistic opts
 dispatch (LogLog opts) = Chart.loglog opts >> return ()
 dispatch (Chart opts) = Chart.linear opts >> return ()
 dispatch (Convert opts) = Convert.main opts
@@ -70,22 +60,22 @@ options :: Parser Options
 options =
   subparser $ mconcat
   [ command "adev"
-      (info (ADEV <$> ADEV.options)
+      (info (ADEV ADEV.ADEV <$> ADEV.options)
        (progDesc "Compute Allan deviation"))
   , command "mdev"
-      (info (MDEV <$> ADEV.options)
+      (info (ADEV ADEV.MDEV <$> ADEV.options)
        (progDesc "Compute Modified Allan deviation"))
   , command "tdev"
-      (info (TDEV <$> ADEV.options)
+      (info (ADEV ADEV.TDEV <$> ADEV.options)
        (progDesc "Compute Time deviation"))
   , command "hdev"
-      (info (HDEV <$> ADEV.options)
+      (info (ADEV ADEV.HDEV <$> ADEV.options)
        (progDesc "Compute Hadamard deviation"))
   , command "totdev"
-      (info (TOTDEV <$> ADEV.options)
+      (info (ADEV ADEV.TOTDEV <$> ADEV.options)
        (progDesc "Compute TOTDEV"))
   , command "theobr"
-      (info (TheoBR <$> ADEV.options)
+      (info (ADEV ADEV.TheoBR <$> ADEV.options)
        (progDesc "Compute TheoBR deviation"))
   , command "loglog"
       (info (LogLog <$> Chart.options)

@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 
 module TauSigma.Statistics.Util
        ( Tau0
@@ -5,18 +6,15 @@ module TauSigma.Statistics.Util
        , differences
        , summation
        , sumsq
-       , allTaus
        ) where
-
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
 
+import Text.Printf
+
 
 type Tau0 = Int
-
 
 -- | Converts frequency error data to phase error data.
 integrate :: (Num a, Vector v a) => v a -> v a
@@ -35,7 +33,7 @@ differences xs = V.zipWith (+) (V.map negate xs) (V.tail xs)
 summation :: Num a => Int -> Int -> (Int -> a) -> a
 {-# INLINE summation #-}
 summation from to term
-  | from > to = error "bad range in summation"
+  | from > to = error (printf "bad range in summation: %d to %d" from to)
   | otherwise = go 0 from
   where go subtotal i
           | i < to    = go (subtotal + term i) (i+1)
@@ -46,15 +44,9 @@ summation from to term
 sumsq :: Num a => Int -> Int -> (Int -> a) -> a
 {-# INLINE sumsq #-}
 sumsq from to term
-  | from > to = error "bad range in summation"
+  | from > to = error (printf "bad range in sumsq: %d to %d" from to)
   | otherwise = go 0 from
   where go subtotal i
           | i < to    = go (subtotal + (term i)^2) (i+1)
           | otherwise = subtotal
 
-
--- | Auxiliary function to compute one statistic at all given taus
-allTaus :: Vector v a => [Tau0] -> (Tau0 -> v a -> a) -> v a -> IntMap a
-{-# INLINE allTaus #-}
-allTaus taus statistic xs = IntMap.fromList (map step taus)
-  where step m = (m, statistic m xs)

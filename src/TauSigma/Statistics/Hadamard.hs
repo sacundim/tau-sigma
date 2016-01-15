@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 -- | Hadamard variance and deviation estimators.  See:
 --
 -- * http://tf.nist.gov/general/pdf/2220.pdf
@@ -10,10 +12,11 @@ module TauSigma.Statistics.Hadamard
        , hdevs
        ) where
 
-import Data.IntMap.Lazy (IntMap)
-
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
+
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import TauSigma.Statistics.Util
 
@@ -40,8 +43,9 @@ hdev tau0 m xs = sqrt (hvar tau0 m xs)
 -- away and discard the map!
 hvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE hvars #-}
-hvars tau0 xs = allTaus [1..maxTaus] (hvar tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 3
+hvars tau0 xs = IntMap.fromList (map go taus)
+  where taus = [1 .. (V.length xs - 1) `div` 3]
+        go m = (m, hvar tau0 m xs)
                     
 -- | Overlapped estimator of Hadamard deviation at all sampling intervals.
 -- Note that this returns a lazy 'IntMap' whose thunks hold on to the
@@ -49,5 +53,4 @@ hvars tau0 xs = allTaus [1..maxTaus] (hvar tau0) xs
 -- away and discard the map!
 hdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE hdevs #-}
-hdevs tau0 xs = allTaus [1..maxTaus] (hdev tau0) xs
-  where maxTaus = (V.length xs - 1) `div` 3
+hdevs tau0 xs = IntMap.map sqrt (hvars tau0 xs)

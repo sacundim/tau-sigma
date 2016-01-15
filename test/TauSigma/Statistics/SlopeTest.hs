@@ -9,11 +9,11 @@ module TauSigma.Statistics.SlopeTest
        , slopeTest
        ) where
 
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
-
 import Data.Tagged
 import Data.Vector (Vector)
+
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import Pipes
 import qualified Pipes.Prelude as P
@@ -73,7 +73,7 @@ type Point = (Int, Double)
 badSlopes :: Slope -> Error -> IntMap Double -> [(Int, Int, Slope, Error)]
 badSlopes standard tolerance graph =
   [ (x0, x1, round slope, round err)
-  | let points = IntMap.toList graph
+  | let points = IntMap.toAscList graph
   , (p0@(x0, y0), p1@(x1, y1)) <- withSuccessors (,) points
   , let slope = logSlope (fromIntegral x0, y0) (fromIntegral x1, y1)
   , let err = abs (slope - standard)

@@ -1,7 +1,5 @@
 module TauSigma.Statistics.HadamardSpec where
 
-import Data.IntMap.Lazy (IntMap)
-
 import Pipes
 
 import TauSigma.Statistics.Hadamard (hdevs)

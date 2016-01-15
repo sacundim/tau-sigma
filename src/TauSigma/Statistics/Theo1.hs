@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Theo1 stability statistic.  See:
@@ -6,6 +7,8 @@
 -- * http://tf.nist.gov/general/pdf/2220.pdf
 module TauSigma.Statistics.Theo1
        ( Tau0
+
+       , isTheo1Tau
          
        , theo1var
        , theo1dev
@@ -18,23 +21,24 @@ module TauSigma.Statistics.Theo1
        , toTheoBRdevs
        ) where
 
-import Data.Maybe (fromJust)
-import Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
-
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
-import TauSigma.Statistics.Allan (avars)
-import TauSigma.Statistics.Util (Tau0, summation, allTaus)
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
+import TauSigma.Statistics.Allan (avars)
+import TauSigma.Statistics.Util
+
+
+-- | Theo1 is only defined for certain sampling intervals.
+isTheo1Tau :: Int -> Int -> Bool
+isTheo1Tau m size = even m && 10 <= m && m <= size - 1
 
 theo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
 {-# INLINABLE theo1var #-}
 theo1var tau0 m xs
-  | even m
-    && 10 <= m
-    && m <= V.length xs - 1 =
+  | m `isTheo1Tau` V.length xs =
       Just (unsafeTheo1var tau0 m xs)
   | otherwise = Nothing
 
@@ -44,17 +48,14 @@ theo1dev tau0 m xs = fmap sqrt (theo1var tau0 m xs)
 
 theo1vars :: (Fractional a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theo1vars #-}
-theo1vars tau0 xs =
-  allTaus (theo1Taus (V.length xs)) (unsafeTheo1var tau0) xs
+theo1vars tau0 xs = IntMap.fromList (map go taus)
+  where size = V.length xs
+        taus = filter (flip isTheo1Tau size) [1 .. 3 * (size `div` 4)]
+        go m = (m, unsafeTheo1var tau0 m xs)
 
 theo1devs :: (Floating a, Vector v a) => Tau0 -> v a -> IntMap a
 {-# INLINABLE theo1devs #-}
-theo1devs tau0 xs = 
-  allTaus (theo1Taus (V.length xs)) (unsafeTheo1dev tau0) xs
-
-theo1Taus :: Int -> [Int]
-theo1Taus size = filter even [10..limit]
-  where limit = 3 * (size `div` 4)
+theo1devs tau0 xs = IntMap.map sqrt (theo1vars tau0 xs)
 
 
 -- | This is a worse than a partial function: it's a function that
@@ -94,15 +95,15 @@ theoBRdevs tau0 xs = IntMap.map sqrt (theoBRvars tau0 xs)
 
 
 toTheoBRvars
-  :: forall a. RealFrac a =>
+  :: forall v a. (RealFrac a) =>
      Int        -- ^ The length of the phase point data set
   -> IntMap a   -- ^ The 'avars' result
   -> IntMap a   -- ^ The 'theo1vars' result
   -> IntMap a
 {-# INLINABLE toTheoBRvars #-}
-toTheoBRvars size allans theo1s = IntMap.mapWithKey go theo1s
-  where go :: Int -> a -> a
-        go _ theo1AtM = (1 / fromIntegral (n+1)) * ratio * theo1AtM 
+toTheoBRvars size allans theo1s = IntMap.map go theo1s
+  where go :: a -> a
+        go theo1 = (ratio * theo1) / fromIntegral (n+1)
 
         n :: Int
         -- From Howe & Tasset:
@@ -120,15 +121,16 @@ toTheoBRvars size allans theo1s = IntMap.mapWithKey go theo1s
           where term :: Int -> a
                 term i = theAvar / theTheo1
                   where unsafe :: Int -> IntMap a -> a
-                        {-# INLINE unsafe #-}
-                        unsafe k m = fromJust (IntMap.lookup k m)
+                        unsafe k m = case IntMap.lookup k m of
+                                      Just v -> v
+                                      _ -> error "toTheoBRvars: bad index"
                         theAvar :: a
                         theAvar  = unsafe (9 + 3*i) allans
                         theTheo1 :: a
                         theTheo1 = unsafe (12 + 4*i) theo1s
 
 toTheoBRdevs
-  :: forall a. (Floating a, RealFrac a) =>
+  :: (Floating a, RealFrac a) =>
      Int        -- ^ The length of the phase point data set
   -> IntMap a   -- ^ The 'avars' result
   -> IntMap a   -- ^ The 'theo1vars' result
