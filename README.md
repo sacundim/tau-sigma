@@ -49,6 +49,8 @@ applying `tau-sigma` to data from the
 
 * [Stability of mean solar day](../images/earth-1960-2015.svg)
 
+This example is scripted in [`script/iers.sh`](script/iers.sh).  More
+about the data in [`example-data/README.md`](example-data/README.md).
 
 
 ### Arnold #36 pocket chronometer
