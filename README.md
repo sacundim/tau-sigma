@@ -65,6 +65,32 @@ one of the very earliest successful precision watches.  Read more in
 ![Arnold #36 TheoBR](images/arnold36_theobr.png)
 
 
+## Correctness
+
+I do not warranty that the results of this program are always correct.
+If you crash a satellite or something because of an error in my
+program that's your fault.
+
+Nevertheless, I have taken care to test that the results at least look
+sensible.  The following properties are tested:
+
+1. The results of most of the frequency stability functions are
+   compared against the ones published by Riley and Howe (2008) for
+   two public data sets.  See:
+  * [`NBSSpec.hs`](test/TauSigma/Statistics/NBSSpec.hs)
+  * [`RileySpec.hs`](test/TauSigma/Statistics/RileySpec.hs)
+2. There's also tests that check that the slopes of the statistics
+   are more or less what they should be on various noise types.   See:
+  * [`AllanSpec.hs`](test/TauSigma/Statistics/AllanSpec.hs)
+  * [`HadamardSpec.hs`](test/TauSigma/Statistics/HadamardSpec.hs)
+  * [`Theo1Spec.hs`](test/TauSigma/Statistics/Theo1Spec.hs)
+  * [`TotalSpec.hs`](test/TauSigma/Statistics/TotalSpec.hs)
+
+Not all statistics are subjected to all the tests just yet.  In
+particular, I don't have example data sets of the TheoBR statistic to
+compare against.  It passes its slope tests but *caveat emptor*.
+
+
 ## TODO
 
 * Error bars!
