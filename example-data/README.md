@@ -38,8 +38,11 @@ The gaps are all relatively short, so again, they likely don't
 contribute much to the result.
 
 In any case, the most important thing about this data isn't the exact
-value of the deviation at any one sampling interval.  The most
-important thing, to my judgement, is the shape of the stability curve.
+value of the deviation at any one sampling interval.  What I'm
+interested in here is:
+
+1. The approximate inflection points the stability curve;
+2. The order of magnitude of the stability values.
 
 
 ![Arnold #36 daily rates](../images/arnold36_frequency.png)
