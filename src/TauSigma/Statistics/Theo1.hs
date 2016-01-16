@@ -19,7 +19,12 @@ module TauSigma.Statistics.Theo1
        , theoBRdevs
        , toTheoBRvars
        , toTheoBRdevs
+
+       , theoHvars
+       , theoHdevs
        ) where
+
+import Data.Monoid ((<>), mempty)
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
@@ -138,3 +143,24 @@ toTheoBRdevs
 {-# INLINABLE toTheoBRdevs #-}
 toTheoBRdevs size allans theo1s =
   IntMap.map sqrt (toTheoBRvars size allans theo1s)
+
+
+theoHvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE theoHvars #-}
+theoHvars tau0 xs = combine k allans theoBRs
+  where allans = avars tau0 xs
+        theo1s = theo1vars tau0 xs
+        theoBRs = toTheoBRvars (V.length xs) allans theo1s
+        k = V.length xs `div` 10
+
+theoHdevs :: (RealFrac a, Floating a, Vector v a) => Tau0 -> v a -> IntMap a
+{-# INLINABLE theoHdevs #-}
+theoHdevs tau0 xs = IntMap.map sqrt (theoHvars tau0 xs)
+
+combine :: Int -> IntMap a -> IntMap a -> IntMap a
+combine k lower higher = lower' <> mid' <> higher'
+  where (lower', _) = IntMap.split k lower
+        (_, mid, higher') = IntMap.splitLookup (k*4 `div` 3) higher
+        mid' = case mid of
+                 Just x -> IntMap.singleton k x
+                 Nothing -> mempty

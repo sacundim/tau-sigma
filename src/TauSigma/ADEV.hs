@@ -35,14 +35,14 @@ import TauSigma.Types
 import TauSigma.Statistics.Allan (adevs, mdevs, tdevs)
 import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Total (totdevs)
-import TauSigma.Statistics.Theo1 (theoBRdevs)
+import TauSigma.Statistics.Theo1 (theoBRdevs, theoHdevs)
 import TauSigma.Statistics.Util (Tau0)
 
 import TauSigma.Util.CSV
 import TauSigma.Util.Vector (drainToVector)
 
 
-data Statistic = ADEV | MDEV | TDEV | HDEV | TOTDEV | TheoBR
+data Statistic = ADEV | MDEV | TDEV | HDEV | TOTDEV | TheoBR | TheoH
 
 data Options
   = Options { _tau0 :: Tau0
@@ -89,3 +89,4 @@ dispatch TDEV   = tdevs
 dispatch HDEV   = hdevs
 dispatch TOTDEV = totdevs
 dispatch TheoBR = theoBRdevs
+dispatch TheoH  = theoHdevs

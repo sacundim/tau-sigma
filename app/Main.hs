@@ -77,6 +77,9 @@ options =
   , command "theobr"
       (info (ADEV ADEV.TheoBR <$> ADEV.options)
        (progDesc "Compute TheoBR deviation"))
+  , command "theoh"
+      (info (ADEV ADEV.TheoH <$> ADEV.options)
+       (progDesc "Compute TheoH deviation"))
   , command "loglog"
       (info (LogLog <$> Chart.options)
        (progDesc "Make a log/log tau/sigma graph"))
