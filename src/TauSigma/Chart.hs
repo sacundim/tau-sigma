@@ -9,13 +9,17 @@ module TauSigma.Chart
        ) where
 
 import Control.Applicative
-import Control.Lens
+import Control.Arrow ((***))
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
+import Control.Lens
 
+import Data.Semigroup (sconcat, Min(..), Max(..))
 import Data.Csv (HasHeader(..), fromOnly)
 import Data.Ord (comparing)
-import Data.List(minimumBy)
+import Data.List (minimumBy)
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
 
 import Graphics.Rendering.Chart.Easy hiding (label)
 import Graphics.Rendering.Chart.Backend.Diagrams
@@ -27,11 +31,13 @@ import Pipes
 import Pipes.ByteString (stdin)
 import qualified Pipes.Prelude as P
 
-import TauSigma.Types (TauSigma(..))
+import TauSigma.Types (TauSigma(..), Scale(..), toScale, fromScale)
 import TauSigma.Util.CSV
 
 import Text.Printf
 
+
+type BoxSize = (Double, Double)
 
 data Options
   = Options { _path :: FilePath
@@ -42,14 +48,14 @@ $(makeLenses ''Options)
 
 
 options :: Parser Options
-options = Options
-      <$> strOption
+options = Options <$> path <*> label
+  where path = strOption
           ( long "out"
          <> short 'o'
          <> metavar "PATH"
          <> help "Path to write SVG file to"
           )
-      <*> strOption
+        label = strOption
           ( long "label"
          <> short 'l'
          <> metavar "STRING"
@@ -70,15 +76,17 @@ loglog
   -> ExceptT String m (PickFn (LayoutPick LogValue LogValue LogValue))
 loglog opts = do
   points <- P.toListM (decodeByName stdin)
-  liftIO $ writeSquareSVG opts (logLogChart (view label opts) points)
+  let chart = logLogChart (view label opts) points
+  let size@(x, y) = logLogChartSize (800, 800) (NonEmpty.fromList points)
+  liftIO $ writeSizedSVG opts size chart
 
 
 writeSVG :: Options -> Renderable a -> IO (PickFn a)
 writeSVG opts = renderableToFile def (view path opts)
 
-writeSquareSVG :: Options -> Renderable a -> IO (PickFn a)
-writeSquareSVG opts =
-  renderableToFile (set fo_size (800, 800) def) (view path opts)
+writeSizedSVG :: Options -> BoxSize -> Renderable a -> IO (PickFn a)
+writeSizedSVG opts size = 
+  renderableToFile (set fo_size size def) (view path opts)
 
 
 lineCharts :: [(String, [Double])] -> Renderable ()
@@ -86,6 +94,31 @@ lineCharts sets =
   toRenderable $ execEC (mapM_ (plot . singleChart) sets)
   where singleChart :: (String, [Double]) ->  EC l (PlotLines Int Double)
         singleChart (name, points) = line name [(zip [1..] points)]
+
+logLogChartSize
+  :: BoxSize            -- ^ size of bounding box
+  -> NonEmpty TauSigma  -- ^ the data
+  -> BoxSize            -- ^ size of chart
+logLogChartSize (boundX, boundY) points
+  | scaleX > scaleY = (boundX, boundY')
+  | otherwise = (boundX', boundY)
+  where (scaleX, scaleY) = logBox points
+        boundX' = boundX * (scaleX / scaleY)
+        boundY' = boundY * (scaleY / scaleX)
+
+logBox :: NonEmpty TauSigma -> BoxSize
+logBox = fromScales . quantize' . sconcat . NonEmpty.map toScales
+  where toScales (TauSigma tau sigma) = 
+          let tau'   = log10 (fromIntegral tau)
+              sigma' = log10 sigma
+              in (toScale tau', toScale sigma')
+        quantize' = quantize *** quantize
+        fromScales = fromScale *** fromScale
+
+quantize :: Scale Double -> Scale Double
+quantize (Scale (Min a) (Max b)) = Scale (Min (floor' a)) (Max (ceiling' b))
+  where floor' = fromIntegral . floor
+        ceiling' = fromIntegral . ceiling
 
 
 logLogChart

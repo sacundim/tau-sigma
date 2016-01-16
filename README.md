@@ -132,3 +132,5 @@ in Unix and OS X systems).
   National Institute of Standards and Technology Special Publication
   1065, July 2008. Boulder, Colorado: National Institute of Standards
   and Technology.
+* Tange, O.  2011.  "GNU Parallel - The Command-Line Power Tool."
+  *;login: The USENIX Maganize*, vol. 36, No.1 (Feb. 2011), pp. 42-47.
