@@ -64,6 +64,10 @@ one of the very earliest successful precision watches.  Read more in
 
 ![Arnold #36 TheoBR](images/arnold36_theobr.png)
 
+Daily Rates                             | Time error                          | ADEV
+----------------------------------------|-------------------------------------|----------------------------------
+![rates](images/arnold36_frequency.png) | ![phase](images/arnold36_phase.png) | ![adev](images/arnold36_adev.png)
+
 
 ## Correctness
 

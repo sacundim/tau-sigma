@@ -30,6 +30,29 @@ clock.  The transit clock's error was computed irregularly about every
 calibrations, so values for sampling periods lower than say 10 days
 are questionable.
 
+There are a few gaps where Greenwich did not record rates for the
+watch for some days.  In their analysis the way they handled this was
+to assume that the watch kept a perfectly steady rate during the gap.
+This can be seen as "flat" valleys or peaks in the daily rate chart.
+The gaps are all relatively short, so again, they likely don't
+contribute much to the result.
+
+In any case, the most important thing about this data isn't the exact
+value of the deviation at any one sampling interval.  What I'm
+interested in here is:
+
+1. The approximate inflection points the stability curve;
+2. The order of magnitude of the stability values.
+
+So the TheoBR chart suggests this watch could keep its initial rate to
+within about 45 seconds (2 standard deviations) for 60 days, but for
+periods longer than that its rates went on a random walk or a
+deterministic drift.
+
+![Arnold #36 daily rates](../images/arnold36_frequency.png)
+
+![Arnold #36 time errors](../images/arnold36_phase.png)
+
 ![Arnold #36 TheoBR](../images/arnold36_theobr.png)
 
 
