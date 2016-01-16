@@ -31,13 +31,13 @@ not performance.
 
 These examples are scripted in [`script/examples.sh`](script/examples.sh).
 
-Noise Type                       | Time errors                   | Frequency errors                  | ADEV
----------------------------------|-------------------------------|-----------------------------------|------------------------------
-White phase modulation           | [WPM](images/wpm_phase.svg)   | [WPM](images/wpm_frequency.svg)   | [WPM](images/wpm_adev.svg)
-Flicker phase modulation         | [FPM](images/fpm_phase.svg)   | [FPM](images/fpm_frequency.svg)   | [FPM](images/fpm_adev.svg)
-White frequency modulation       | [WFM](images/wfm_phase.svg)   | [WFM](images/wfm_frequency.svg)   | [WFM](images/wfm_adev.svg)
-Flicker frequency modulation     | [FFM](images/ffm_phase.svg)   | [FFM](images/ffm_frequency.svg)   | [FFM](images/ffm_adev.svg)
-Random walk frequency modulation | [RWFM](images/rwfm_phase.svg) | [RWFM](images/rwfm_frequency.svg) | [RWFM](images/rwfm_adev.svg)
+Noise Type                       | Time errors                    | Frequency errors                   | ADEV
+---------------------------------|--------------------------------|------------------------------------|------------------------------
+White phase modulation           | ![WPM](images/wpm_phase.png)   | ![WPM](images/wpm_frequency.png)   | ![WPM](images/wpm_adev.png)
+Flicker phase modulation         | ![FPM](images/fpm_phase.png)   | ![FPM](images/fpm_frequency.png)   | ![FPM](images/fpm_adev.png)
+White frequency modulation       | ![WFM](images/wfm_phase.png)   | ![WFM](images/wfm_frequency.png)   | ![WFM](images/wfm_adev.png)
+Flicker frequency modulation     | ![FFM](images/ffm_phase.png)   | ![FFM](images/ffm_frequency.png)   | ![FFM](images/ffm_adev.png)
+Random walk frequency modulation | ![RWFM](images/rwfm_phase.png) | ![RWFM](images/rwfm_frequency.png) | ![RWFM](images/rwfm_adev.png)
 
 
 
@@ -47,7 +47,7 @@ The rotation of our planet is not stable.  We can illustrate by
 applying `tau-sigma` to data from the
 [International Earth Rotation Service](http://www.iers.org/IERS/EN/Home/home_node.html):
 
-* [Stability of mean solar day](../images/earth-1960-2015.svg)
+![Stability of mean solar day](../images/earth-1960-2015.png)
 
 This example is scripted in [`script/iers.sh`](script/iers.sh).  More
 about the data in [`example-data/README.md`](example-data/README.md).
@@ -62,7 +62,7 @@ example: the 1779/80 Greenwich trial of
 one of the very earliest successful precision watches.  Read more in
 [`example-data/README.md`](example-data/README.md).
 
-* [Arnold #36 TheoBR](images/arnold36_theobr.svg)
+![Arnold #36 TheoBR](images/arnold36_theobr.png)
 
 
 ## TODO

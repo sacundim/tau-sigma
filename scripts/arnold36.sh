@@ -6,14 +6,19 @@
 set -xe
 cd `dirname $0`/..
 
+TMP=`mktemp -d -t tmp`
+CONVERT="convert -density 1200 -resize 600x600"
+
 cat example-data/arnold36.csv \
     | tau-sigma adev --tau0 86400 --max-tau 50 \
     | tau-sigma loglog \
                 --label "ADEV" \
-                --out images/arnold36_adev.svg
+                --out ${TMP}/arnold36_adev.svg
+$CONVERT ${TMP}/arnold36_adev.svg images/arnold36_adev.png
 
 cat example-data/arnold36.csv \
     | tau-sigma theobr --tau0 86400 --max-tau 100 \
     | tau-sigma loglog \
                 --label "TheoBR" \
-                --out images/arnold36_theobr.svg
+                --out ${TMP}/arnold36_theobr.svg
+$CONVERT ${TMP}/arnold36_theobr.svg images/arnold36_theobr.png
