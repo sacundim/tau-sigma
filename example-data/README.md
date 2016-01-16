@@ -30,4 +30,18 @@ clock.  The transit clock's error was computed irregularly about every
 calibrations, so values for sampling periods lower than say 10 days
 are questionable.
 
-* [Arnold #36 TheoBR](../images/arnold36_theobr.svg)
+![Arnold #36 TheoBR](../images/arnold36_theobr.png)
+
+
+## Earth Rotation, 1962-2015
+
+The data is taken from here:
+
+* http://www.iers.org/IERS/EN/DataProducts/EarthOrientationData/eop.html
+
+The parameter that's of interest to us is "LOD" (length of day).  This
+value is the excess length of each recorded mean solar day, relative
+to 86,400 atomic seconds.  This value is thus a frequency error data
+series.
+
+![Mean solar day stability (TOTDEV)](../images/earth-1960-2015.png)
