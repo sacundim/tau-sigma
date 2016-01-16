@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Generate some example charts
+# Generate some example charts.  This requires ImageMagick with librsvg.
 #
 
 set -x -e

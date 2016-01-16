@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # Script to generate an ADEV graph for the Earth's rotation, using
-# IERS length-of-day data.  This requires the `xsv` utilty:
+# IERS length-of-day data.  This requires ImageMagick with librsvg,
+# and the `xsv` utilty:
 #
 # https://github.com/BurntSushi/xsv
 #

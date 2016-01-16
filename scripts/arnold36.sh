@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Generate charts for Arnold #36
+# Generate charts for Arnold #36.  This requires ImageMagick with librsvg.
 #
 
 set -xe
