@@ -47,7 +47,7 @@ The rotation of our planet is not stable.  We can illustrate by
 applying `tau-sigma` to data from the
 [International Earth Rotation Service](http://www.iers.org/IERS/EN/Home/home_node.html):
 
-![Stability of mean solar day](../images/earth-1960-2015.png)
+![Stability of mean solar day](images/earth-1960-2015.png)
 
 This example is scripted in [`script/iers.sh`](script/iers.sh).  More
 about the data in [`example-data/README.md`](example-data/README.md).
