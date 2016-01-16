@@ -91,6 +91,22 @@ particular, I don't have example data sets of the TheoBR statistic to
 compare against.  It passes its slope tests but *caveat emptor*.
 
 
+## Compilation and Installation
+
+This is a pure [Haskell](https://www.haskell.org/) program built with
+the [Stack tool](http://haskellstack.org/), so you need to install
+that to compile the program.
+
+Once you've done that the installation follows standard Stack procedure:
+
+1. Clone this Git repo.
+2. Change into the base directory and run `stack install`.
+
+This will install the `tau-sigma` commandline program to the location
+where the Stack tool puts executable programs (default `~/.local/bin/`
+in Unix and OS X systems).
+
+
 ## TODO
 
 * Error bars!
