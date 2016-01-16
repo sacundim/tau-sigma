@@ -29,7 +29,7 @@ not performance.
 
 ### Random Noise
 
-These examples are scripted in [`script/examples.sh`](script/examples.sh).
+These examples are scripted in [`scripts/examples.sh`](scripts/examples.sh).
 
 Noise Type                       | Time errors                    | Frequency errors                   | ADEV
 ---------------------------------|--------------------------------|------------------------------------|------------------------------
@@ -49,7 +49,7 @@ applying `tau-sigma` to data from the
 
 ![Stability of mean solar day](images/earth-1960-2015.png)
 
-This example is scripted in [`script/iers.sh`](script/iers.sh).  More
+This example is scripted in [`scripts/iers.sh`](scripts/iers.sh).  More
 about the data in [`example-data/README.md`](example-data/README.md).
 
 
