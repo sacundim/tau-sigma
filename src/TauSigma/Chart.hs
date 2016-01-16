@@ -9,11 +9,12 @@ module TauSigma.Chart
        ) where
 
 import Control.Applicative
-import Control.Lens
+import Control.Arrow ((***))
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
+import Control.Lens
 
-import Data.Semigroup (sconcat)
+import Data.Semigroup (sconcat, Min(..), Max(..))
 import Data.Csv (HasHeader(..), fromOnly)
 import Data.Ord (comparing)
 import Data.List (minimumBy)
@@ -30,7 +31,7 @@ import Pipes
 import Pipes.ByteString (stdin)
 import qualified Pipes.Prelude as P
 
-import TauSigma.Types (TauSigma(..), Scale, toScale, fromScale)
+import TauSigma.Types (TauSigma(..), Scale(..), toScale, fromScale)
 import TauSigma.Util.CSV
 
 import Text.Printf
@@ -101,23 +102,23 @@ logLogChartSize
 logLogChartSize (boundX, boundY) points
   | scaleX > scaleY = (boundX, boundY')
   | otherwise = (boundX', boundY)
-  where (scaleX, scaleY) = quantizeBox (logBox points)
+  where (scaleX, scaleY) = logBox points
         boundX' = boundX * (scaleX / scaleY)
         boundY' = boundY * (scaleY / scaleX)
 
-
-quantizeBox :: BoxSize -> BoxSize
-quantizeBox (scaleX, scaleY) = (roundUp scaleX, roundUp scaleY)
-  where roundUp :: Double -> Double
-        roundUp n = fromIntegral (ceiling n :: Integer)
-
 logBox :: NonEmpty TauSigma -> BoxSize
-logBox = fromScales . sconcat . NonEmpty.map toScales
+logBox = fromScales . quantize' . sconcat . NonEmpty.map toScales
   where toScales (TauSigma tau sigma) = 
           let tau'   = log10 (fromIntegral tau)
               sigma' = log10 sigma
               in (toScale tau', toScale sigma')
-        fromScales (tau, sigma) = (fromScale tau, fromScale sigma)
+        quantize' = quantize *** quantize
+        fromScales = fromScale *** fromScale
+
+quantize :: Scale Double -> Scale Double
+quantize (Scale (Min a) (Max b)) = Scale (Min (floor' a)) (Max (ceiling' b))
+  where floor' = fromIntegral . floor
+        ceiling' = fromIntegral . ceiling
 
 
 logLogChart
