@@ -30,7 +30,13 @@ clock.  The transit clock's error was computed irregularly about every
 calibrations, so values for sampling periods lower than say 10 days
 are questionable.
 
+![Arnold #36 daily rates](../images/arnold36_frequency.png)
+
+![Arnold #36 time errors](../images/arnold36_phase.png)
+
 ![Arnold #36 TheoBR](../images/arnold36_theobr.png)
+
+![Arnold #36 ADEV](../images/arnold36_adev.png)
 
 
 ## Earth Rotation, 1962-2015
