@@ -9,12 +9,20 @@ module TauSigma.Types
        , FreqData
        , Tagged(..)
        , TauSigma(..)
+       , Scale(..)
+       , toScale
+       , fromScale
        ) where
 
 import Control.Applicative
-import Data.Csv
+
 import Data.Tagged
+import Data.Semigroup (Semigroup(..), Min(..), Max(..))
+
 import qualified Data.Vector.Generic as G
+
+import Data.Csv
+
 
 data Domain = Phase | Frequency deriving Read
 
@@ -46,4 +54,20 @@ instance ToRecord TauSigma where
 instance ToNamedRecord TauSigma where
   toNamedRecord (TauSigma tau sigma) =
     namedRecord ["tau" .= tau, "sigma" .= sigma]
+
+
+
+-- | A 'Semigroup' for computing the scale of a non-empty set of
+-- values.  By scale we mean the difference between the largest value
+-- and the smallest.
+data Scale a = Scale (Min a) (Max a)
+
+toScale :: a -> Scale a
+toScale a = Scale (Min a) (Max a)
+
+fromScale :: Num a => Scale a -> a
+fromScale (Scale (Min a) (Max b)) = b - a
+
+instance Ord a => Semigroup (Scale a) where
+  Scale a b <> Scale c d = Scale (a <> c) (b <> d)
 

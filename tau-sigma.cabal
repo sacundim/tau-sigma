@@ -50,6 +50,7 @@ library
                      , pipes-bytestring
                      , pipes-csv
                      , primitive
+                     , semigroups
                      , tagged
                      , transformers
                      , vector

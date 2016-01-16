@@ -13,9 +13,12 @@ import Control.Lens
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
 
+import Data.Semigroup (sconcat)
 import Data.Csv (HasHeader(..), fromOnly)
 import Data.Ord (comparing)
-import Data.List(minimumBy)
+import Data.List (minimumBy)
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
 
 import Graphics.Rendering.Chart.Easy hiding (label)
 import Graphics.Rendering.Chart.Backend.Diagrams
@@ -27,11 +30,13 @@ import Pipes
 import Pipes.ByteString (stdin)
 import qualified Pipes.Prelude as P
 
-import TauSigma.Types (TauSigma(..))
+import TauSigma.Types (TauSigma(..), Scale, toScale, fromScale)
 import TauSigma.Util.CSV
 
 import Text.Printf
 
+
+type BoxSize = (Double, Double)
 
 data Options
   = Options { _path :: FilePath
@@ -70,15 +75,17 @@ loglog
   -> ExceptT String m (PickFn (LayoutPick LogValue LogValue LogValue))
 loglog opts = do
   points <- P.toListM (decodeByName stdin)
-  liftIO $ writeSquareSVG opts (logLogChart (view label opts) points)
+  let chart = logLogChart (view label opts) points
+  let size@(x, y) = logLogChartSize (800, 800) (NonEmpty.fromList points)
+  liftIO $ writeSizedSVG opts size chart
 
 
 writeSVG :: Options -> Renderable a -> IO (PickFn a)
 writeSVG opts = renderableToFile def (view path opts)
 
-writeSquareSVG :: Options -> Renderable a -> IO (PickFn a)
-writeSquareSVG opts =
-  renderableToFile (set fo_size (800, 800) def) (view path opts)
+writeSizedSVG :: Options -> BoxSize -> Renderable a -> IO (PickFn a)
+writeSizedSVG opts size = 
+  renderableToFile (set fo_size size def) (view path opts)
 
 
 lineCharts :: [(String, [Double])] -> Renderable ()
@@ -86,6 +93,31 @@ lineCharts sets =
   toRenderable $ execEC (mapM_ (plot . singleChart) sets)
   where singleChart :: (String, [Double]) ->  EC l (PlotLines Int Double)
         singleChart (name, points) = line name [(zip [1..] points)]
+
+logLogChartSize
+  :: BoxSize            -- ^ size of bounding box
+  -> NonEmpty TauSigma  -- ^ the data
+  -> BoxSize            -- ^ size of chart
+logLogChartSize (boundX, boundY) points
+  | scaleX > scaleY = (boundX, boundY')
+  | otherwise = (boundX', boundY)
+  where (scaleX, scaleY) = quantizeBox (logBox points)
+        boundX' = boundX * (scaleX / scaleY)
+        boundY' = boundY * (scaleY / scaleX)
+
+
+quantizeBox :: BoxSize -> BoxSize
+quantizeBox (scaleX, scaleY) = (roundUp scaleX, roundUp scaleY)
+  where roundUp :: Double -> Double
+        roundUp n = fromIntegral (ceiling n :: Integer)
+
+logBox :: NonEmpty TauSigma -> BoxSize
+logBox = fromScales . sconcat . NonEmpty.map toScales
+  where toScales (TauSigma tau sigma) = 
+          let tau'   = log10 (fromIntegral tau)
+              sigma' = log10 sigma
+              in (toScale tau', toScale sigma')
+        fromScales (tau, sigma) = (fromScale tau, fromScale sigma)
 
 
 logLogChart
