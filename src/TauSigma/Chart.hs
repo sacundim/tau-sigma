@@ -42,14 +42,14 @@ $(makeLenses ''Options)
 
 
 options :: Parser Options
-options = Options
-      <$> strOption
+options = Options <$> path <*> label
+  where path = strOption
           ( long "out"
          <> short 'o'
          <> metavar "PATH"
          <> help "Path to write SVG file to"
           )
-      <*> strOption
+        label = strOption
           ( long "label"
          <> short 'l'
          <> metavar "STRING"
