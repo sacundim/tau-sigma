@@ -23,6 +23,6 @@ xsv select -d ';' LOD ${INPUT} \
                 --input-denominator 86400 \
                 --output-domain Phase \
                 --output-denominator 86400 \
-    | tau-sigma totdev --tau0 86400 --max-tau 10000 \
+    | tau-sigma totdev --tau0 86400 --max-tau 1e9 \
     | tau-sigma loglog --label "totdev" --out ${TMP}/earth-1960-2015.svg
 $CONVERT ${TMP}/earth-1960-2015.svg images/earth-1960-2015.png
