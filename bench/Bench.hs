@@ -10,13 +10,12 @@ import Control.Monad.Primitive (PrimMonad)
 import Data.Tagged (Tagged(..))
 import qualified Data.Vector.Unboxed as U
 
-import Data.IntMap (IntMap)
-
 import Pipes
 import qualified Pipes.Prelude as P
 
 import System.Random.MWC.Monad (Rand, runWithCreate)
 
+import TauSigma.Statistics.Types
 import TauSigma.Statistics.Allan (adevs)
 import TauSigma.Statistics.Hadamard (hdevs)
 import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
@@ -34,7 +33,7 @@ import TauSigma.Util.Pipes.Noise
 import TauSigma.Util.Vector
 
 
-type Statistic = U.Vector Double -> IntMap Double
+type Statistic = U.Vector (Time Double) -> [TauSigma Double]
 type Noise m = Producer (TimeData Double) (Rand m) ()
 
 main :: IO ()
