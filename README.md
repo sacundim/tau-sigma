@@ -155,7 +155,7 @@ in Unix and OS X systems).
 ## References
 
 * Howe, D.A. 2006.
-  ["TheoH: a hybrid, high-confidence statistic that improves on the Allan deviation."](http://tf.nist.gov/timefreq/general/pdf/1990.pdf)
+  ["TheoH: a hybrid, high-confidence statistic that improves on the Allan deviation."](http://www.tf.nist.gov/timefreq/general/pdf/2109.pdf)
   *Metrologia* 43 (2006) S322-331.
 * Riley, William and David A. Howe.  2008.
   [*Handbook of Frequency Stability Analysis*](http://tf.nist.gov/general/pdf/2220.pdf).
