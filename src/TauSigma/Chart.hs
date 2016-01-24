@@ -31,7 +31,7 @@ import Pipes
 import Pipes.ByteString (stdin)
 import qualified Pipes.Prelude as P
 
-import TauSigma.Types (TauSigma(..), Scale(..), toScale, fromScale)
+import TauSigma.Types (TauSigma(..), tau, Scale(..), toScale, fromScale)
 import TauSigma.Util.CSV
 
 import Text.Printf
@@ -42,13 +42,14 @@ type BoxSize = (Double, Double)
 data Options
   = Options { _path :: FilePath
             , _label :: String
+            , _xunit :: Double
             }
 
 $(makeLenses ''Options)
 
 
 options :: Parser Options
-options = Options <$> path <*> label
+options = Options <$> path <*> label <*> xunit
   where path = strOption
           ( long "out"
          <> short 'o'
@@ -61,6 +62,12 @@ options = Options <$> path <*> label
          <> metavar "STRING"
          <> value "value"
          <> help "Label to use in graph legend"
+          )
+        xunit = option auto
+          ( long "xunit"
+         <> metavar "N"
+         <> help "Unit size of x axis (in seconds)"
+         <> value 1.0
           )
 
 
@@ -75,7 +82,8 @@ loglog
      Options
   -> ExceptT String m (PickFn (LayoutPick LogValue LogValue LogValue))
 loglog opts = do
-  points <- P.toListM (decodeByName stdin)
+  raw <- P.toListM (decodeByName stdin)
+  let points = over (traverse . tau) (/(view xunit opts)) raw
   let chart = logLogChart (view label opts) points
   let size@(x, y) = logLogChartSize (800, 800) (NonEmpty.fromList points)
   liftIO $ writeSizedSVG opts size chart

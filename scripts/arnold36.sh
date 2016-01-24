@@ -29,16 +29,9 @@ $CONVERT ${TMP}/arnold36_frequency.svg images/arnold36_frequency.png
 
 
 cat example-data/arnold36.csv \
-    | tau-sigma adev --tau0 86400 --max-tau 1e7 \
+    | tau-sigma theoh --tau0 86400 --max-tau 8.64e6 \
     | tau-sigma loglog \
-                --label "ADEV" \
-                --out ${TMP}/arnold36_adev.svg
-$CONVERT ${TMP}/arnold36_adev.svg images/arnold36_adev.png
-
-
-cat example-data/arnold36.csv \
-    | tau-sigma theobr --tau0 86400 --max-tau 1e7 \
-    | tau-sigma loglog \
-                --label "TheoBR" \
-                --out ${TMP}/arnold36_theobr.svg
-$CONVERT ${TMP}/arnold36_theobr.svg images/arnold36_theobr.png
+                --label "TheoH" \
+                --xunit 86400 \
+                --out ${TMP}/arnold36_theoh.svg
+$CONVERT ${TMP}/arnold36_theoh.svg images/arnold36_theoh.png

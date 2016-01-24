@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Types shared by many modules in this application.
 module TauSigma.Types
@@ -9,12 +10,15 @@ module TauSigma.Types
        , FreqData
        , Tagged(..)
        , TauSigma(..)
+       , tau
+       , sigma
        , Scale(..)
        , toScale
        , fromScale
        ) where
 
 import Control.Applicative
+import Control.Lens (makeLenses)
 
 import Data.Tagged
 import Data.Semigroup (Semigroup(..), Min(..), Max(..))
@@ -39,7 +43,10 @@ type FreqData = Tagged Frequency
 
 
 -- | A tau/sigma pair.
-data TauSigma = TauSigma { tau :: !(Tau Double), sigma :: !(Sigma Double) }
+data TauSigma = TauSigma { _tau :: !(Tau Double), _sigma :: !(Sigma Double) }
+
+$(makeLenses ''TauSigma)
+
 
 instance FromRecord TauSigma where
   parseRecord v
