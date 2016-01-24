@@ -12,6 +12,7 @@ Data taken from:
   new-invented Balance Spring, and a Compensation for the Effects of
   Heat and Cold in the Balance.  Published by Permission of the Board
   of Longitude.*  London: John Arnold, No. 2 Adam-Street, Adelphi.
+  Accessed online (Jan. 2016) at: http://cudl.lib.cam.ac.uk/view/PR-UNCAT-00005
 
 The data are time errors recorded in seconds, and go from March 26,
 1779 to February 29, 1780.  The report shows both frequency and time
