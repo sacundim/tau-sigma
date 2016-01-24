@@ -131,7 +131,7 @@ logLogChart name sigmas = layoutToRenderable layout
           $ plot_lines_title .~ name
           $ def
 
-    layout = layout_x_axis . laxis_generate .~ squareLogAxis def
+    layout = layout_x_axis . laxis_generate .~ squareLogAxis exponentialAxis
            $ layout_x_axis . laxis_title .~ "tau"
            $ layout_y_axis . laxis_generate .~ squareLogAxis exponentialAxis
            $ layout_y_axis . laxis_title .~ "sigma"
