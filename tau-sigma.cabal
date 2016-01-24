@@ -37,7 +37,6 @@ library
                      , base >=4.7 && <5
                      , bytestring 
                      , cassava 
-                     , containers
                      , data-default 
                      , deepseq
                      , filepath 
@@ -76,7 +75,6 @@ Test-Suite spec
   Ghc-Options:         -Wall -O
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
-                     , containers
                      , data-default 
                      , hspec
                      , mwc-random
@@ -95,7 +93,6 @@ Benchmark bench
   Ghc-Options:         -Wall -O -rtsopts -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
-                     , containers
                      , criterion
                      , mwc-random
                      , mwc-random-monad
