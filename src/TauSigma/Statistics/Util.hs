@@ -27,10 +27,17 @@ differences xs = V.zipWith (+) (V.map negate xs) (V.tail xs)
 
 
 -- | Sum a series of 'Int'-indexed terms.  Inclusive start, exclusive end.
-summation :: Num a => Int -> Int -> (Int -> a) -> a
+summation
+  :: Num a =>
+     String       -- ^ A name to be printed in errors (for troubleshooting).
+  -> Int          -- ^ Starting index (inclusive)
+  -> Int          -- ^ Ending index (exclusive)
+  -> (Int -> a)   -- ^ Term of summation
+  -> a
 {-# INLINE summation #-}
-summation from to term
-  | from > to = error (printf "bad range in summation: %d to %d" from to)
+summation name from to term
+  | from > to =
+      error (printf "%s: bad range in summation: %d to %d" name from to)
   | otherwise = go 0 from
   where go subtotal i
           | i < to    = go (subtotal + term i) (i+1)

@@ -85,8 +85,8 @@ unsafeTheo1var tau0 m xs = outer / (0.75 * divisor)
   where divisor = (len - m') * (m' * tau0)^2
           where m' = fromIntegral m
                 len = fromIntegral (V.length xs)
-        outer = summation 0 (V.length xs - m) middle
-          where middle i = summation 0 (m `div` 2) inner
+        outer = summation "outer" 0 (V.length xs - m) middle
+          where middle i = summation "middle" 0 (m `div` 2) inner
                   where inner d = term^2 / fromIntegral (halfM - d)
                           where halfM = m `div` 2
                                 term = (xs!i - xs!(i - d + halfM))
@@ -105,8 +105,13 @@ theoBRvars
      (RealFrac a, Vector v a) =>
      Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theoBRvars #-}
-theoBRvars tau0 xs = map go (theo1Steps (V.length xs))
+theoBRvars tau0 xs
+  | n > 0 = map go (theo1Steps (V.length xs))
+  | otherwise = []
   where
+    n :: Int
+    n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
+
     go :: Int -> TauSigma a
     go m = (tau, sigma)
       where
@@ -114,8 +119,7 @@ theoBRvars tau0 xs = map go (theo1Steps (V.length xs))
         sigma = (ratio * theo1) / fromIntegral (n+1)
           where
             theo1 = unsafeTheo1var tau0 m xs
-            n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
-            ratio = summation 0 (n+1) term
+            ratio = summation "ratio" 0 (n+1) term
               where term i = avar tau0 (9 + 3*i) xs
                            / unsafeTheo1var tau0 (12 + 4*i) xs
 

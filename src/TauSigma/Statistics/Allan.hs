@@ -68,7 +68,7 @@ mvar tau0 m xs = outer / divisor
       where m' = fromIntegral m
             len = fromIntegral (V.length xs)
     outer = sumsq 0 (V.length xs - 3*m + 1) inner
-      where inner j = summation j (j + m) term
+      where inner j = summation "mvar" j (j + m) term
               where term i = xs!(i+2*m) - 2*(xs!(i+m)) + xs!i
 
 mdev :: (Floating a, Vector v a) => Tau0 a -> Int -> v (Time a) -> Sigma a
