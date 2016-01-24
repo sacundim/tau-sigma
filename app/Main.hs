@@ -5,7 +5,6 @@ module Main (main) where
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Except
 
-import Data.Monoid
 import Data.Version (showVersion)
     
 import Options.Applicative

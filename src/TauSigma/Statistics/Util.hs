@@ -1,8 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module TauSigma.Statistics.Util
-       ( Tau0
-       , integrate
+       ( integrate
        , differences
        , summation
        , sumsq
@@ -13,8 +12,6 @@ import qualified Data.Vector.Generic as V
 
 import Text.Printf
 
-
-type Tau0 = Int
 
 -- | Converts frequency error data to phase error data.
 integrate :: (Num a, Vector v a) => v a -> v a

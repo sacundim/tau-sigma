@@ -23,6 +23,8 @@ import qualified Data.Vector.Generic as G
 
 import Data.Csv
 
+import TauSigma.Statistics.Types (Tau, Sigma)
+
 
 data Domain = Phase | Frequency deriving Read
 
@@ -37,7 +39,7 @@ type FreqData = Tagged Frequency
 
 
 -- | A tau/sigma pair.
-data TauSigma = TauSigma { tau :: !Int, sigma :: !Double }
+data TauSigma = TauSigma { tau :: !(Tau Double), sigma :: !(Sigma Double) }
 
 instance FromRecord TauSigma where
   parseRecord v
