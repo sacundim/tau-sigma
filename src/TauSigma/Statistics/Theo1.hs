@@ -8,7 +8,8 @@
 module TauSigma.Statistics.Theo1
        ( module TauSigma.Statistics.Types
 
-       , isTheo1Tau
+       , theo1Tau
+       , isTheo1Step
          
        , theo1var
        , theo1dev
@@ -22,7 +23,7 @@ module TauSigma.Statistics.Theo1
        , theoHdevs
        ) where
 
-import Control.Lens (over, _2)
+import Control.Lens (over, _2, _Just)
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
@@ -32,34 +33,44 @@ import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
 
 
--- | Theo1 is only defined for certain sampling intervals.
-isTheo1Tau :: Int -> Int -> Bool
-isTheo1Tau m size = even m && 10 <= m && m <= size - 1
+theo1Tau :: Fractional a => Tau0 a -> Int -> Maybe (Tau a)
+theo1Tau tau0 m
+  | even m && 10 <= m = Just (unsafeTheo1Tau tau0 m)
+  | otherwise         = Nothing
 
-theo1Taus :: Int -> [Int]
-theo1Taus size = filter (flip isTheo1Tau size) [1 .. 3 * (size `div` 4)]
+unsafeTheo1Tau :: Fractional a => Tau0 a -> Int -> Tau a
+unsafeTheo1Tau tau0 m = 0.75 * fromIntegral m * tau0
+
+
+
+-- | Theo1 is only defined for certain sampling intervals.
+isTheo1Step :: Int -> Int -> Bool
+isTheo1Step m size = even m && 10 <= m && m <= size - 1
+
+theo1Steps :: Int -> [Int]
+theo1Steps size = filter (flip isTheo1Step size) [1 .. 3 * (size `div` 4)]
 
 
 theo1var
   :: (Fractional a, Vector v a) =>
-     Tau0 a -> Int -> v (Time a) -> Maybe (Sigma a)
+     Tau0 a -> Int -> v (Time a) -> Maybe (TauSigma a)
 {-# INLINABLE theo1var #-}
 theo1var tau0 m xs
-  | m `isTheo1Tau` V.length xs =
-      Just (unsafeTheo1var tau0 m xs)
+  | m `isTheo1Step` V.length xs =
+      Just (unsafeTheo1Tau tau0 m, unsafeTheo1var tau0 m xs)
   | otherwise = Nothing
 
 theo1dev
   :: (Floating a, Vector v a) =>
-     Tau0 a -> Int -> v (Time a) -> Maybe (Sigma a)
+     Tau0 a -> Int -> v (Time a) -> Maybe (TauSigma a)
 {-# INLINABLE theo1dev #-}
-theo1dev tau0 m xs = fmap sqrt (theo1var tau0 m xs)
+theo1dev tau0 m xs = over (_Just . _2) sqrt (theo1var tau0 m xs)
 
 theo1vars :: (Fractional a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theo1vars #-}
-theo1vars tau0 xs = map go (theo1Taus size)
+theo1vars tau0 xs = map go (theo1Steps size)
   where size = V.length xs
-        go m = (0.75 * fromIntegral m * tau0, unsafeTheo1var tau0 m xs)
+        go m = (unsafeTheo1Tau tau0 m, unsafeTheo1var tau0 m xs)
 
 theo1devs :: (Floating a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theo1devs #-}
@@ -94,7 +105,7 @@ theoBRvars
      (RealFrac a, Vector v a) =>
      Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theoBRvars #-}
-theoBRvars tau0 xs = map go (theo1Taus (V.length xs))
+theoBRvars tau0 xs = map go (theo1Steps (V.length xs))
   where
     go :: Int -> TauSigma a
     go m = (tau, sigma)
