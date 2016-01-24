@@ -17,6 +17,7 @@ import Control.Monad.Trans.Except
 import Control.Lens (view)
 import Control.Lens.TH
 
+import Data.Maybe (fromMaybe)
 import Data.Csv (HasHeader(..), fromOnly)
 
 import qualified Data.Vector as V
@@ -43,7 +44,7 @@ data Statistic = ADEV | MDEV | TDEV | HDEV | TOTDEV | TheoBR | TheoH
 
 data Options
   = Options { _tau0 :: Tau0 Double
-            , _maxTau :: Tau Double
+            , _maxTau :: Maybe (Tau Double)
             }
 
 $(makeLenses ''Options)
@@ -58,10 +59,10 @@ options = Options <$> tau0 <*> maxTau
                       , metavar "N"
                       , help "Base sampling interval"
                       ]
-        maxTau = option auto
+        maxTau = option (fmap Just auto) 
                  `with` [ long "max-tau"
                         , metavar "N"
-                        , value 100
+                        , value Nothing
                         , help "Maximum multiple of tau0 to output."
                         ]
 
@@ -73,11 +74,13 @@ main :: (PrimMonad m, MonadIO m) =>
 main statistic opts = do
   errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
   runEffect $ each (dispatch statistic (view tau0 opts) errors)
-          >-> P.takeWhile (\(tau, _) -> tau <= view maxTau opts)
+          >-> P.takeWhile (\(tau, _) -> tau <= limit)
           >-> P.map (uncurry TauSigma)
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
+  where limit = fromMaybe (view tau0 opts * 100) (view maxTau opts)
 
+                            
 dispatch
   :: Statistic
   -> Tau0 Double
