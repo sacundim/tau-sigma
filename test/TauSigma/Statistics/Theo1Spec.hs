@@ -31,7 +31,7 @@ theo1Cases =
              , samples     = sampleSize
              , taus        = (30, 50)
              , expected    = (-0.5)
-             , tolerance   = 0.1
+             , tolerance   = 0.25
              , statistic   = theo1devs 1
              , noise       = wfm
              }
@@ -47,7 +47,7 @@ theoBRCases =
              , samples     = sampleSize
              , taus        = (30, 50)
              , expected    = (-0.5)
-             , tolerance   = 0.1
+             , tolerance   = 0.25
              , statistic   = theoBRdevs 1
              , noise       = wfm
              }
