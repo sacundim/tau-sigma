@@ -108,10 +108,8 @@ logLogChartSize (boundX, boundY) points
 
 logBox :: NonEmpty TauSigma -> BoxSize
 logBox = fromScales . quantize' . sconcat . NonEmpty.map toScales
-  where toScales (TauSigma tau sigma) = 
-          let tau'   = log10 (fromIntegral tau)
-              sigma' = log10 sigma
-              in (toScale tau', toScale sigma')
+  where toScales (TauSigma tau sigma) =
+          (toScale (log10 tau), toScale (log10 sigma))
         quantize' = quantize *** quantize
         fromScales = fromScale *** fromScale
 
@@ -127,13 +125,13 @@ logLogChart
   -> Renderable (LayoutPick LogValue LogValue LogValue)
 logLogChart name sigmas = layoutToRenderable layout
   where
-    makePoint (TauSigma x y) = (LogValue (fromIntegral x), LogValue y)
+    makePoint (TauSigma x y) = (LogValue x, LogValue y)
 
     lines = plot_lines_values .~ [map makePoint sigmas]
           $ plot_lines_title .~ name
           $ def
 
-    layout = layout_x_axis . laxis_generate .~ squareLogAxis def
+    layout = layout_x_axis . laxis_generate .~ squareLogAxis exponentialAxis
            $ layout_x_axis . laxis_title .~ "tau"
            $ layout_y_axis . laxis_generate .~ squareLogAxis exponentialAxis
            $ layout_y_axis . laxis_title .~ "sigma"

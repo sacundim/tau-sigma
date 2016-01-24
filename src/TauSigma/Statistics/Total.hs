@@ -9,7 +9,7 @@
 -- * Handbook of Frequency Stability Analysis
 --
 module TauSigma.Statistics.Total
-       ( Tau0
+       ( module TauSigma.Statistics.Types
        , (!*)
        , totvar
        , totdev
@@ -17,12 +17,12 @@ module TauSigma.Statistics.Total
        , totdevs
        ) where
 
+import Control.Lens (over, _2)
+
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
-
+import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
 
 
@@ -38,33 +38,31 @@ xs !* i
 infixl 9 !*
 
 -- | TOTVAR estimator at one sampling interval.
-totvar :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+totvar :: (Fractional a, Vector v a) => Tau0 a -> Int -> v a -> a
 {-# INLINABLE totvar #-}
-totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / fromIntegral divisor
-  where divisor :: Integer
-        divisor = 2 * m'^2 * tau0'^2 * (len - 2)
+totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / divisor
+  where divisor = 2 * m'^2 * tau0^2 * (len - 2)
           where m' = fromIntegral m
-                tau0' = fromIntegral tau0
                 len = fromIntegral (V.length xs)
         term notI = xs!*(i-m) - 2*xs!*i + xs!*(i+m)
           where i = notI+1
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
-totdev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+totdev :: (Floating a, Vector v a) => Tau0 a -> Int -> v a -> a
 {-# INLINABLE totdev#-}
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
-totvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+totvars :: (RealFrac a, Vector v a) => Tau0 a -> v a -> [TauSigma a]
 {-# INLINABLE totvars #-}
-totvars tau0 xs = IntMap.fromList (map go taus)
+totvars tau0 xs = map go taus
   where taus = [1 .. V.length xs - 2]
-        go m = (m, totvar tau0 m xs)
+        go m = (fromIntegral m * tau0, totvar tau0 m xs)
 
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
-totdevs :: (RealFloat a, Vector v a) => Tau0 -> v a -> IntMap a
+totdevs :: (RealFloat a, Vector v a) => Tau0 a -> v a -> [TauSigma a]
 {-# INLINABLE totdevs #-}
-totdevs tau0 xs = IntMap.map sqrt (totvars tau0 xs)
+totdevs tau0 xs = over (traverse . _2) sqrt (totvars tau0 xs)
 
 

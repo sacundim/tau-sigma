@@ -5,7 +5,6 @@ module Main (main) where
 import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Except
 
-import Data.Monoid
 import Data.Version (showVersion)
     
 import Options.Applicative
@@ -77,6 +76,9 @@ options =
   , command "theobr"
       (info (ADEV ADEV.TheoBR <$> ADEV.options)
        (progDesc "Compute TheoBR deviation"))
+  , command "theoh"
+      (info (ADEV ADEV.TheoH <$> ADEV.options)
+       (progDesc "Compute TheoH deviation"))
   , command "loglog"
       (info (LogLog <$> Chart.options)
        (progDesc "Make a log/log tau/sigma graph"))

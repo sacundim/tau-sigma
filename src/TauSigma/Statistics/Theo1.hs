@@ -6,9 +6,10 @@
 -- * http://tf.nist.gov/timefreq/general/pdf/1990.pdf
 -- * http://tf.nist.gov/general/pdf/2220.pdf
 module TauSigma.Statistics.Theo1
-       ( Tau0
+       ( module TauSigma.Statistics.Types
 
-       , isTheo1Tau
+       , theo1Tau
+       , isTheo1Step
          
        , theo1var
        , theo1dev
@@ -17,57 +18,72 @@ module TauSigma.Statistics.Theo1
 
        , theoBRvars
        , theoBRdevs
-       , toTheoBRvars
-       , toTheoBRdevs
+
+       , theoHvars
+       , theoHdevs
        ) where
+
+import Control.Lens (over, _2, _Just)
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
-
-import TauSigma.Statistics.Allan (avars)
+import TauSigma.Statistics.Allan (avar, avars)
+import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
 
 
--- | Theo1 is only defined for certain sampling intervals.
-isTheo1Tau :: Int -> Int -> Bool
-isTheo1Tau m size = even m && 10 <= m && m <= size - 1
+theo1Tau :: Fractional a => Tau0 a -> Int -> Maybe (Tau a)
+theo1Tau tau0 m
+  | even m && 10 <= m = Just (unsafeTheo1Tau tau0 m)
+  | otherwise         = Nothing
 
-theo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
+unsafeTheo1Tau :: Fractional a => Tau0 a -> Int -> Tau a
+unsafeTheo1Tau tau0 m = 0.75 * fromIntegral m * tau0
+
+
+
+-- | Theo1 is only defined for certain sampling intervals.
+isTheo1Step :: Int -> Int -> Bool
+isTheo1Step m size = even m && 10 <= m && m <= size - 1
+
+theo1Steps :: Int -> [Int]
+theo1Steps size = filter (flip isTheo1Step size) [1 .. 3 * (size `div` 4)]
+
+
+theo1var
+  :: (Fractional a, Vector v a) =>
+     Tau0 a -> Int -> v (Time a) -> Maybe (TauSigma a)
 {-# INLINABLE theo1var #-}
 theo1var tau0 m xs
-  | m `isTheo1Tau` V.length xs =
-      Just (unsafeTheo1var tau0 m xs)
+  | m `isTheo1Step` V.length xs =
+      Just (unsafeTheo1Tau tau0 m, unsafeTheo1var tau0 m xs)
   | otherwise = Nothing
 
-theo1dev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> Maybe a
+theo1dev
+  :: (Floating a, Vector v a) =>
+     Tau0 a -> Int -> v (Time a) -> Maybe (TauSigma a)
 {-# INLINABLE theo1dev #-}
-theo1dev tau0 m xs = fmap sqrt (theo1var tau0 m xs)
+theo1dev tau0 m xs = over (_Just . _2) sqrt (theo1var tau0 m xs)
 
-theo1vars :: (Fractional a, Vector v a) => Tau0 -> v a -> IntMap a
+theo1vars :: (Fractional a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theo1vars #-}
-theo1vars tau0 xs = IntMap.fromList (map go taus)
+theo1vars tau0 xs = map go (theo1Steps size)
   where size = V.length xs
-        taus = filter (flip isTheo1Tau size) [1 .. 3 * (size `div` 4)]
-        go m = (m, unsafeTheo1var tau0 m xs)
+        go m = (unsafeTheo1Tau tau0 m, unsafeTheo1var tau0 m xs)
 
-theo1devs :: (Floating a, Vector v a) => Tau0 -> v a -> IntMap a
+theo1devs :: (Floating a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theo1devs #-}
-theo1devs tau0 xs = IntMap.map sqrt (theo1vars tau0 xs)
+theo1devs tau0 xs = over (traverse . _2) sqrt (theo1vars tau0 xs)
 
 
--- | This is a worse than a partial function: it's a function that
--- produces incorrect results for some of its arguments.  Stick to
--- 'theo1vars' unless you really know what you're doing.
-unsafeTheo1var :: (Fractional a, Vector v a) => Tau0 -> Int -> v a -> a
+unsafeTheo1var
+  :: (Fractional a, Vector v a) =>
+     Tau0 a -> Int -> v (Time a) -> Sigma a
 {-# INLINABLE unsafeTheo1var #-}
-unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
-  where divisor :: Integer
-        divisor = (len - m') * (m' * tau0')^2
+unsafeTheo1var tau0 m xs = outer / (0.75 * divisor)
+  where divisor = (len - m') * (m' * tau0)^2
           where m' = fromIntegral m
-                tau0' = fromIntegral tau0
                 len = fromIntegral (V.length xs)
         outer = summation 0 (V.length xs - m) middle
           where middle i = summation 0 (m `div` 2) inner
@@ -76,65 +92,61 @@ unsafeTheo1var tau0 m xs = outer / (0.75 * fromIntegral divisor)
                                 term = (xs!i - xs!(i - d + halfM))
                                      + (xs!(i+m) -xs!(i + d + halfM))
 
-unsafeTheo1dev :: (Floating a, Vector v a) => Tau0 -> Int -> v a -> a
+unsafeTheo1dev
+  :: (Floating a, Vector v a) =>
+     Tau0 a -> Int -> v (Time a) -> Sigma a
 {-# INLINABLE unsafeTheo1dev #-}
 unsafeTheo1dev tau0 m xs = sqrt (unsafeTheo1var tau0 m xs)
 
--- | Bias-reduced Theo1 variance.  This computes 'avars' and
--- 'theo1vars', so if you're doing that anyway you may wish to use
--- 'toTheoBRvars' which reuses the memoized results of those two.
-theoBRvars :: (RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+
+-- | Bias-reduced Theo1 variance.  
+theoBRvars
+  :: forall v a.
+     (RealFrac a, Vector v a) =>
+     Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theoBRvars #-}
-theoBRvars tau0 xs = toTheoBRvars (V.length xs) allans theo1s
-  where allans = avars tau0 xs
-        theo1s = theo1vars tau0 xs
+theoBRvars tau0 xs = map go (theo1Steps (V.length xs))
+  where
+    go :: Int -> TauSigma a
+    go m = (tau, sigma)
+      where
+        tau = 0.75 * fromIntegral m * tau0
+        sigma = (ratio * theo1) / fromIntegral (n+1)
+          where
+            theo1 = unsafeTheo1var tau0 m xs
+            n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
+            ratio = summation 0 (n+1) term
+              where term i = avar tau0 (9 + 3*i) xs
+                           / unsafeTheo1var tau0 (12 + 4*i) xs
 
-theoBRdevs :: (Floating a, RealFrac a, Vector v a) => Tau0 -> v a -> IntMap a
+
+theoBRdevs
+  :: (Floating a, RealFrac a, Vector v a) =>
+     Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE theoBRdevs #-}
-theoBRdevs tau0 xs = IntMap.map sqrt (theoBRvars tau0 xs)
+theoBRdevs tau0 xs = over (traverse . _2) sqrt (theoBRvars tau0 xs)
 
 
-toTheoBRvars
-  :: forall v a. (RealFrac a) =>
-     Int        -- ^ The length of the phase point data set
-  -> IntMap a   -- ^ The 'avars' result
-  -> IntMap a   -- ^ The 'theo1vars' result
-  -> IntMap a
-{-# INLINABLE toTheoBRvars #-}
-toTheoBRvars size allans theo1s = IntMap.map go theo1s
-  where go :: a -> a
-        go theo1 = (ratio * theo1) / fromIntegral (n+1)
+                           
+theoHvars :: (RealFrac a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
+{-# INLINABLE theoHvars #-}
+theoHvars tau0 xs = mergeOn fst allans theoBRs
+  where k = fromIntegral (V.length xs `div` 10) * tau0
+        allans = filter cutoff (avars tau0 xs)
+          where cutoff (tau, _) = tau < k
+        theoBRs = filter cutoff (theoBRvars tau0 xs)
+          where cutoff (tau, _) = k <= tau
 
-        n :: Int
-        -- From Howe & Tasset:
-        n = floor (((0.1 * fromIntegral size) / 3) - 3)
-{- Riley has this instead:
+mergeOn :: Ord b => (a -> b) -> [a] -> [a] -> [a]
+mergeOn _ [] ys = ys
+mergeOn _ xs [] = xs
+mergeOn f xs'@(x:xs) ys'@(y:ys)
+  | f x <= f y = x : mergeOn f xs ys'
+  | otherwise = y : mergeOn f xs' ys
 
-        n = floor (fromIntegral size / 6 - 3)
+theoHdevs
+  :: (RealFrac a, Floating a, Vector v a) =>
+     Tau0 a -> v (Time a) -> [TauSigma a]
+{-# INLINABLE theoHdevs #-}
+theoHdevs tau0 xs = over (traverse . _2) sqrt (theoHvars tau0 xs)
 
-   Which is way slower and for some tests produces Maybe.fromJust: Nothing
-   errors in the ratio code below.
--}
-
-        ratio :: a
-        ratio = summation 0 (n+1) term
-          where term :: Int -> a
-                term i = theAvar / theTheo1
-                  where unsafe :: Int -> IntMap a -> a
-                        unsafe k m = case IntMap.lookup k m of
-                                      Just v -> v
-                                      _ -> error "toTheoBRvars: bad index"
-                        theAvar :: a
-                        theAvar  = unsafe (9 + 3*i) allans
-                        theTheo1 :: a
-                        theTheo1 = unsafe (12 + 4*i) theo1s
-
-toTheoBRdevs
-  :: (Floating a, RealFrac a) =>
-     Int        -- ^ The length of the phase point data set
-  -> IntMap a   -- ^ The 'avars' result
-  -> IntMap a   -- ^ The 'theo1vars' result
-  -> IntMap a
-{-# INLINABLE toTheoBRdevs #-}
-toTheoBRdevs size allans theo1s =
-  IntMap.map sqrt (toTheoBRvars size allans theo1s)

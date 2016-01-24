@@ -12,9 +12,6 @@ module TauSigma.Statistics.SlopeTest
 import Data.Tagged
 import Data.Vector (Vector)
 
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
-
 import Pipes
 import qualified Pipes.Prelude as P
 
@@ -22,13 +19,14 @@ import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import Text.Printf
 
+import TauSigma.Statistics.Types (Tau, Sigma, TauSigma)
 import TauSigma.Util.Pipes.Noise (TimeData)
 import TauSigma.Util.Vector (takeVector)
 
 import Test.Hspec
 
 
-type Statistic = Vector Double -> IntMap Double
+type Statistic = Vector Double -> [TauSigma Double]
 type Slope = Double
 type Error = Double
 
@@ -36,7 +34,7 @@ data TestCase
   = TestCase { name        :: String
              , description :: String
              , samples     :: Int
-             , taus        :: (Int, Int)
+             , taus        :: (Double, Double)
              , expected    :: Slope
              , tolerance   :: Error
              , statistic   :: Statistic
@@ -64,18 +62,21 @@ slopeTest TestCase {..} =
       failures `shouldBe` []
 
 
-filterKeys :: (Int, Int) -> IntMap a -> IntMap a
-filterKeys (lo,hi) = IntMap.filterWithKey go
-  where go key _ = lo <= key && key <= hi 
+filterKeys :: Ord a => (Tau a, Tau a) -> [TauSigma a] -> [TauSigma a]
+filterKeys (lo,hi) = filter go
+  where go (tau, _) = lo <= tau && tau <= hi 
 
 type Point = (Int, Double)
 
-badSlopes :: Slope -> Error -> IntMap Double -> [(Int, Int, Slope, Error)]
+badSlopes
+  :: Slope
+  -> Error
+  -> [TauSigma Double]
+  -> [(Double, Double, Slope, Error)]
 badSlopes standard tolerance graph =
   [ (x0, x1, round slope, round err)
-  | let points = IntMap.toAscList graph
-  , (p0@(x0, y0), p1@(x1, y1)) <- withSuccessors (,) points
-  , let slope = logSlope (fromIntegral x0, y0) (fromIntegral x1, y1)
+  | (p0@(x0, y0), p1@(x1, y1)) <- withSuccessors (,) graph
+  , let slope = logSlope (x0, y0) (x1, y1)
   , let err = abs (slope - standard)
   , err > tolerance
   ]

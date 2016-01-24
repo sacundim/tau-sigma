@@ -1,5 +1,5 @@
 name:                tau-sigma
-version:             0.3.9
+version:             0.4.0
 synopsis:            A command-line utility for frequency stability analysis.
 license:             BSD3
 license-file:        LICENSE
@@ -25,6 +25,7 @@ library
                      , TauSigma.Statistics.Hadamard
                      , TauSigma.Statistics.Theo1
                      , TauSigma.Statistics.Total
+                     , TauSigma.Statistics.Types
                      , TauSigma.Statistics.Util
                      , TauSigma.Util.CSV
                      , TauSigma.Util.Pipes
@@ -36,7 +37,6 @@ library
                      , base >=4.7 && <5
                      , bytestring 
                      , cassava 
-                     , containers
                      , data-default 
                      , deepseq
                      , filepath 
@@ -75,7 +75,6 @@ Test-Suite spec
   Ghc-Options:         -Wall -O
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
-                     , containers
                      , data-default 
                      , hspec
                      , mwc-random
@@ -94,7 +93,6 @@ Benchmark bench
   Ghc-Options:         -Wall -O -rtsopts -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
-                     , containers
                      , criterion
                      , mwc-random
                      , mwc-random-monad
