@@ -88,7 +88,7 @@ mdevs tau0 xs = over (traverse . _2) sqrt (mvars tau0 xs)
 
 tvar :: (Fractional a, Vector v a) => Tau0 a -> Int -> v (Time a) -> Sigma a
 {-# INLINABLE tvar #-}
-tvar tau0 m xs = fst $ mvar2tvar (tau0 * fromIntegral m, mvar tau0 m xs)
+tvar tau0 m xs = mvar2tvar (tau0 * fromIntegral m) (mvar tau0 m xs)
 
 tdev :: (Floating a, Vector v a) => Tau0 a -> Int -> v (Time a) -> Sigma a
 {-# INLINABLE tdev #-}
@@ -96,13 +96,14 @@ tdev tau0 m xs = sqrt (tvar tau0 m xs)
 
 tvars :: (RealFrac a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE tvars #-}
-tvars tau0 xs = map mvar2tvar (mvars tau0 xs)
+tvars tau0 xs = map go (mvars tau0 xs)
+  where go (tau, sigma) = (tau, mvar2tvar tau sigma)
                     
 tdevs :: (RealFloat a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
 {-# INLINABLE tdevs #-}
 tdevs tau0 xs = over (traverse . _2) sqrt (tvars tau0 xs)
 
-mvar2tvar :: Fractional a => TauSigma a -> TauSigma a
+mvar2tvar :: Fractional a => Tau a -> Sigma a -> Sigma a
 {-# INLINE mvar2tvar #-}
-mvar2tvar (tau, a) = (tau, (tau^2 / 3) * a)
+mvar2tvar tau a = (tau^2 / 3) * a
 
