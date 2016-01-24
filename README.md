@@ -7,22 +7,48 @@ stability of clocks in terms of their
 [**Allan deviation**](http://en.wikipedia.org/wiki/Allan_variance).
 It has the following subcommands:
 
-1. `adev`: Read a phase error series from standard input and emit
-   tau/sigma ADEV pairs to standard output as CSV.  Uses the standard
-   overlapped Allan deviation estimator.
-2. `theobr`: Like `adev` but uses TheoBR, a statistic for that
-   produces better estimates of long-term stability (but is much
-   slower than ADEV).
-3. `loglog`: Generate a tau/sigma log-log chart from the output of
-   `adev` or `theobr`.
-4. `chart`: Generate a linear chart from time series data.  Meant for
-   plotting time or frequency error series.
-5. `noise`: A random spectral noise generator for white, flicker and
-   random walk frequency noise types, and mixes thereof.
-6. `convert`: Conversion between phase/frequency data series and units.
+## Subcommands
 
-This tool has so far been written primarily with simplicity in mind,
-not performance.
+### Statistics
+
+All of these commands take time error data as input, one item per line:
+
+Command            | Description
+-------------------|---------------------------------------------------------
+`tau-sigma adev`   | Allan deviation (overlapped estimator)
+`tau-sigma mdev`   | Modified Allan deviation
+`tau-sigma tdev`   | Time deviation
+`tau-sigma hdev`   | Hadamard deviation (overlapped estimator)
+`tau-sigma totdev` | Total deviation
+`tau-sigma theobr` | TheoBR deviation (bias-reduced Theo1)
+`tau-sigma theoh`  | TheoH deviation (Allan at low taus, TheoBR at high taus)
+
+Output is CSV with "tau" and "sigma" column headers.
+
+
+### Charting
+
+This isn't meant to be a full-powered charting tool, but it's useful
+to be able to generate quick-and-dirty plots.
+
+The `tau-sigma chart` command generate a line chart from time series
+data.  This is meant for plotting time or frequency error series.
+
+The `tau-sigma loglog` commands generates a tau/sigma log-log chart
+from the output of the stability statistic subcommands.  The data is
+plotted with square decades to help judge the slopes of the curve.
+
+
+### Noise
+
+The `tau-sigma noise` command generates random spectral noises and
+mixes thereof.
+
+
+### Convert
+
+The `tau-sigma convert` command converts between phase/frequency data
+series and units.
 
 
 ## Examples
@@ -62,19 +88,19 @@ example: the 1779/80 Greenwich trial of
 one of the very earliest successful precision watches.  Read more in
 [`example-data/README.md`](example-data/README.md).
 
-![Arnold #36 TheoBR](images/arnold36_theobr.png)
+![Arnold #36 TheoBR](images/arnold36_theoh.png)
 
-Daily Rates                             | Time error                          | ADEV
-----------------------------------------|-------------------------------------|----------------------------------
-![rates](images/arnold36_frequency.png) | ![phase](images/arnold36_phase.png) | ![adev](images/arnold36_adev.png)
+Daily Rates                             | Time error                         
+----------------------------------------|------------------------------------
+![rates](images/arnold36_frequency.png) | ![phase](images/arnold36_phase.png)
 
 
-## Correctness
+## Performance and correctness
+
+This tool has so far been written primarily with simplicity and
+correctness in mind, not performance.
 
 I do not warranty that the results of this program are always correct.
-If you crash a satellite or something because of an error in my
-program that's your fault.
-
 Nevertheless, I have taken care to test that the results at least look
 sensible.  The following properties are tested:
 
@@ -83,7 +109,10 @@ sensible.  The following properties are tested:
    two public data sets.  See:
   * [`NBSSpec.hs`](test/TauSigma/Statistics/NBSSpec.hs)
   * [`RileySpec.hs`](test/TauSigma/Statistics/RileySpec.hs)
-2. There's also tests that check that the slopes of the statistics
+2. The Theo1 statistic is tested against an example in Appendix A of
+   Howe (2006).  See:
+  * [`HoweSpec.hs`](test/TauSigma/Statistics/HoweSpec.hs)
+3. There's also tests that check that the slopes of the statistics
    are more or less what they should be on various noise types.   See:
   * [`AllanSpec.hs`](test/TauSigma/Statistics/AllanSpec.hs)
   * [`HadamardSpec.hs`](test/TauSigma/Statistics/HadamardSpec.hs)
@@ -91,8 +120,9 @@ sensible.  The following properties are tested:
   * [`TotalSpec.hs`](test/TauSigma/Statistics/TotalSpec.hs)
 
 Not all statistics are subjected to all the tests just yet.  In
-particular, I don't have example data sets of the TheoBR statistic to
-compare against.  It passes its slope tests but *caveat emptor*.
+particular, I don't have example data sets of the TheoBR or TheoH
+statistics to compare against.  (These are derived from the Allan and
+Theo1 deviations, which I do test.)
 
 
 ## Compilation and Installation
@@ -124,9 +154,9 @@ in Unix and OS X systems).
 
 ## References
 
-* Howe, D.A. and T.N. Tasset.  2004.
-  ["Theo1: Characterization of very long-term frequency stability."](http://tf.nist.gov/timefreq/general/pdf/1990.pdf)
-  *Proceedings of the 18th European Frequency and Time Forum (2004)*.
+* Howe, D.A. 2006.
+  ["TheoH: a hybrid, high-confidence statistic that improves on the Allan deviation."](http://tf.nist.gov/timefreq/general/pdf/1990.pdf)
+  *Metrologia* 43 (2006) S322-331.
 * Riley, William and David A. Howe.  2008.
   [*Handbook of Frequency Stability Analysis*](http://tf.nist.gov/general/pdf/2220.pdf).
   National Institute of Standards and Technology Special Publication

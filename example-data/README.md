@@ -44,8 +44,8 @@ interested in here is:
 1. The approximate inflection points the stability curve;
 2. The order of magnitude of the stability values.
 
-So the TheoBR chart suggests this watch could keep its initial rate to
-within about 45 seconds (2 standard deviations) for 60 days, but for
+So the TheoH chart suggests this watch could keep its initial rate to
+within about 30 seconds (2 standard deviations) for 40 days, but for
 periods longer than that its rates went on a random walk or a
 deterministic drift.
 
@@ -53,7 +53,8 @@ deterministic drift.
 
 ![Arnold #36 time errors](../images/arnold36_phase.png)
 
-![Arnold #36 TheoBR](../images/arnold36_theobr.png)
+![Arnold #36 TheoH](../images/arnold36_theoh.png)
+
 
 
 ## Earth Rotation, 1962-2015
