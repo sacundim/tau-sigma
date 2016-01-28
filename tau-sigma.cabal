@@ -1,5 +1,5 @@
 name:                tau-sigma
-version:             0.4.3
+version:             0.4.4
 synopsis:            A command-line utility for frequency stability analysis.
 license:             BSD3
 license-file:        LICENSE
@@ -46,6 +46,7 @@ library
                      , mwc-random-monad
                      , monad-primitive
                      , optparse-applicative 
+                     , parallel
                      , pipes 
                      , pipes-bytestring
                      , pipes-csv
@@ -59,7 +60,7 @@ library
 executable tau-sigma
   default-language:    Haskell2010
   hs-source-dirs:      app
-  Ghc-Options:         -Wall -O
+  Ghc-Options:         -Wall -O -threaded -rtsopts -with-rtsopts=-N
   main-is:             Main.hs
   build-depends:       base >=4.7 && <5
                      , mtl
@@ -90,14 +91,16 @@ Benchmark bench
   Type:                exitcode-stdio-1.0
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      bench
-  Ghc-Options:         -Wall -O -rtsopts -fprof-auto
+  Ghc-Options:         -Wall -O -threaded -rtsopts -with-rtsopts=-N -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , criterion
                      , mwc-random
                      , mwc-random-monad
+                     , parallel
                      , pipes
                      , primitive
                      , tagged
                      , tau-sigma 
                      , vector
+

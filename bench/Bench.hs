@@ -6,6 +6,7 @@ module Main (main) where
 import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
+import Control.Parallel.Strategies (withStrategy, parBuffer, rdeepseq)
 
 import Data.Tagged (Tagged(..))
 import qualified Data.Vector.Unboxed as U
@@ -16,9 +17,10 @@ import qualified Pipes.Prelude as P
 import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import TauSigma.Statistics.Types
-import TauSigma.Statistics.Allan (adevs)
+import TauSigma.Statistics.Allan (adevs, mdevs)
 import TauSigma.Statistics.Hadamard (hdevs)
-import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
+import TauSigma.Statistics.Total (totdevs)
+import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs, theoHdevs)
 
 import TauSigma.Util.Pipes.Noise
   ( TimeData
@@ -40,9 +42,12 @@ main :: IO ()
 main = defaultMain tests
   where tests = [ noiseTests
                 , adevTests
+                , mdevTests
                 , hdevTests
+                , totdevTests
                 , theo1Tests
                 , theoBRTests
+                , theoHTests
                 ]
 
 
@@ -83,9 +88,21 @@ adevTests = bgroup "adev" (runStatistic statistic wfm sizes)
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [50, 500, 5000]
 
+mdevTests :: Benchmark
+mdevTests = bgroup "mdev" (runStatistic statistic wfm sizes)
+  where statistic = mdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
+
 hdevTests :: Benchmark
 hdevTests = bgroup "hdev" (runStatistic statistic wfm sizes)
   where statistic = hdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
+
+totdevTests :: Benchmark
+totdevTests = bgroup "totdev" (runStatistic statistic wfm sizes)
+  where statistic = totdevs 1
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [50, 500, 5000]
 
@@ -96,14 +113,30 @@ theo1Tests = bgroup "theo1" (runStatistic statistic wfm sizes)
         sizes = [200, 400, 600]
 
 theoBRTests :: Benchmark
-theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes)
+theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes) 
   where statistic = theoBRdevs 1
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [200, 400, 600]
 
+theoHTests :: Benchmark
+theoHTests = bgroup "theoH" (runStatistic statistic wfm sizes) 
+  where statistic = theoHdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [200, 400, 600]
 
-runStatistic :: Statistic -> Noise IO -> [Int] -> [Benchmark]
-runStatistic statistic noise = map runOne
-  where runOne size = 
+
+runStatistic
+  :: Statistic
+  -> Noise IO
+  -> [Int]
+  -> [Benchmark]
+runStatistic statistic noise sizes =
+  [ bgroup "seq" (map (runOne statistic) sizes)
+  , bgroup "par" (map (runOne (parallelize statistic)) sizes)
+  ]
+  where runOne stat size = 
           env (runWithCreate $ takeNoise size noise) $ \input -> 
-            bench (show size) $ nf statistic (input)
+            bench (show size) $ nf stat input
+
+parallelize :: Statistic -> Statistic
+parallelize statistic = withStrategy (parBuffer 50 rdeepseq) . statistic
