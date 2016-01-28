@@ -17,6 +17,8 @@ import Control.Monad.Trans.Except
 import Control.Lens (view)
 import Control.Lens.TH
 
+import Control.Parallel.Strategies (withStrategy, parBuffer, rdeepseq)
+
 import Data.Maybe (fromMaybe)
 import Data.Csv (HasHeader(..), fromOnly)
 
@@ -73,14 +75,22 @@ main :: (PrimMonad m, MonadIO m) =>
      -> ExceptT String m ()
 main statistic opts = do
   errors <- drainToVector (decode NoHeader stdin >-> P.map fromOnly)
-  runEffect $ each (dispatch statistic (view tau0 opts) errors)
-          >-> P.takeWhile (\(tau, _) -> tau <= limit)
+  runEffect $ each (compute statistic opts errors)
           >-> P.map (uncurry TauSigma)
           >-> encodeByName (V.fromList ["tau", "sigma"])
           >-> stdout
-  where limit = fromMaybe (view tau0 opts * 100) (view maxTau opts)
 
-                            
+
+compute 
+  :: Statistic
+  -> Options
+  -> U.Vector Double
+  -> [(Tau Double, Sigma Double)]
+compute statistic opts xs = parallelize retained
+  where parallelize = withStrategy (parBuffer 50 rdeepseq)
+        retained = limiter opts all
+          where all = dispatch statistic (view tau0 opts) xs
+
 dispatch
   :: Statistic
   -> Tau0 Double
@@ -93,3 +103,21 @@ dispatch HDEV   = hdevs
 dispatch TOTDEV = totdevs
 dispatch TheoBR = theoBRdevs
 dispatch TheoH  = theoHdevs
+
+
+limiter
+  :: Options
+  -> [(Tau Double, Sigma Double)]
+  -> [(Tau Double, Sigma Double)]
+limiter opts =
+  case view maxTau opts of
+   Nothing -> id
+   Just limit -> limiter' limit
+
+limiter'
+  :: Tau Double
+  -> [(Tau Double, Sigma Double)]
+  -> [(Tau Double, Sigma Double)]
+limiter' limit = filter go
+  where go (tau, _) = tau <= limit
+
