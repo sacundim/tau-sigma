@@ -7,7 +7,7 @@ set -xe
 cd `dirname $0`/..
 
 TMP=`mktemp -d -t tmp`
-CONVERT="convert -density 1200 -resize 800x800"
+CONVERT="convert -density 300 -resize 800x800"
 
 cat example-data/arnold36.csv \
     | tau-sigma chart \

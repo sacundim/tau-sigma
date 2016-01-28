@@ -13,7 +13,7 @@ cd `dirname $0`/..
 INPUT=example-data/eopc04_08.1962-01-01_2015-12-15.csv
 
 TMP=`mktemp -d -t tmp`
-CONVERT="convert -density 1200 -resize 800x800"
+CONVERT="convert -density 300 -resize 800x800"
 
 xsv select -d ';' LOD ${INPUT} \
     | xsv fmt -d ';' \

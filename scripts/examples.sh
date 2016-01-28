@@ -12,7 +12,7 @@ cd `dirname $0`/..
 TMP=`mktemp -d -t tmp`
 TAUS=10
 
-export CONVERT="convert -density 1200 -resize 600x600"
+export CONVERT="convert -density 300 -resize 600x600"
 
 parallel "tau-sigma noise --{} 1.0 > ${TMP}/{}.csv" \
          ::: wpm fpm wfm ffm rwfm
