@@ -10,6 +10,8 @@ module TauSigma.Statistics.Util
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
 
+import Numeric.Sum (KBNSum, kbn, add, zero)
+
 import Text.Printf
 
 
@@ -28,29 +30,30 @@ differences xs = V.zipWith (+) (V.map negate xs) (V.tail xs)
 
 -- | Sum a series of 'Int'-indexed terms.  Inclusive start, exclusive end.
 summation
-  :: Num a =>
-     String       -- ^ A name to be printed in errors (for troubleshooting).
-  -> Int          -- ^ Starting index (inclusive)
-  -> Int          -- ^ Ending index (exclusive)
-  -> (Int -> a)   -- ^ Term of summation
-  -> a
+  :: String           -- ^ A name to print in errors (for troubleshooting).
+  -> Int              -- ^ Starting index (inclusive)
+  -> Int              -- ^ Ending index (exclusive)
+  -> (Int -> Double)  -- ^ Term of summation
+  -> Double
 {-# INLINE summation #-}
 summation name from to term
   | from > to =
       error (printf "%s: bad range in summation: %d to %d" name from to)
-  | otherwise = go 0 from
-  where go subtotal i
-          | i < to    = go (subtotal + term i) (i+1)
+  | otherwise = kbn (go zero from)
+  where go :: KBNSum -> Int -> KBNSum
+        go subtotal i
+          | i < to    = go (subtotal `add` term i) (i+1)
           | otherwise = subtotal
 
 -- | Sum the squares of a series of 'Int'-indexed terms.  Inclusive
 -- start, exclusive end.
-sumsq :: Num a => Int -> Int -> (Int -> a) -> a
+sumsq :: Int -> Int -> (Int -> Double) -> Double
 {-# INLINE sumsq #-}
 sumsq from to term
   | from > to = error (printf "bad range in sumsq: %d to %d" from to)
-  | otherwise = go 0 from
-  where go subtotal i
-          | i < to    = go (subtotal + (term i)^2) (i+1)
+  | otherwise = kbn (go zero from)
+  where go :: KBNSum -> Int -> KBNSum
+        go subtotal i
+          | i < to    = go (subtotal `add` ((term i)^2)) (i+1)
           | otherwise = subtotal
 

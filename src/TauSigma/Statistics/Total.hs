@@ -38,7 +38,8 @@ xs !* i
 infixl 9 !*
 
 -- | TOTVAR estimator at one sampling interval.
-totvar :: (Fractional a, Vector v a) => Tau0 a -> Int -> v a -> a
+totvar :: (Vector v Double) =>
+          Tau0 Double -> Int -> v (Time Double) -> Sigma Double
 {-# INLINABLE totvar #-}
 totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / divisor
   where divisor = 2 * m'^2 * tau0^2 * (len - 2)
@@ -48,12 +49,14 @@ totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / divisor
           where i = notI+1
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
-totdev :: (Floating a, Vector v a) => Tau0 a -> Int -> v a -> a
+totdev :: (Vector v Double) =>
+          Tau0 Double -> Int -> v (Time Double) -> Sigma Double
 {-# INLINABLE totdev#-}
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
-totvars :: (RealFrac a, Vector v a) => Tau0 a -> v a -> [TauSigma a]
+totvars :: (Vector v Double) =>
+           Tau0 Double -> v (Time Double) -> [TauSigma Double]
 {-# INLINABLE totvars #-}
 totvars tau0 xs = map go taus
   where taus = [1 .. V.length xs - 2]
@@ -61,7 +64,8 @@ totvars tau0 xs = map go taus
 
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
-totdevs :: (RealFloat a, Vector v a) => Tau0 a -> v a -> [TauSigma a]
+totdevs :: (Vector v Double) =>
+           Tau0 Double -> v (Time Double) -> [TauSigma Double]
 {-# INLINABLE totdevs #-}
 totdevs tau0 xs = over (traverse . _2) sqrt (totvars tau0 xs)
 

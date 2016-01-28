@@ -42,6 +42,7 @@ library
                      , filepath 
                      , lens 
                      , mtl 
+                     , math-functions
                      , mwc-random
                      , mwc-random-monad
                      , monad-primitive
