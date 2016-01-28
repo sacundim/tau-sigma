@@ -90,14 +90,16 @@ Benchmark bench
   Type:                exitcode-stdio-1.0
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      bench
-  Ghc-Options:         -Wall -O -rtsopts -fprof-auto
+  Ghc-Options:         -Wall -O -threaded -rtsopts -with-rtsopts=-N -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , criterion
                      , mwc-random
                      , mwc-random-monad
+                     , parallel
                      , pipes
                      , primitive
                      , tagged
                      , tau-sigma 
                      , vector
+

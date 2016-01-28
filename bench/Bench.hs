@@ -6,6 +6,7 @@ module Main (main) where
 import Criterion.Main
 
 import Control.Monad.Primitive (PrimMonad)
+import Control.Parallel.Strategies (withStrategy, parBuffer, rdeepseq)
 
 import Data.Tagged (Tagged(..))
 import qualified Data.Vector.Unboxed as U
@@ -96,14 +97,23 @@ theo1Tests = bgroup "theo1" (runStatistic statistic wfm sizes)
         sizes = [200, 400, 600]
 
 theoBRTests :: Benchmark
-theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes)
+theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes) 
   where statistic = theoBRdevs 1
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [200, 400, 600]
 
-
-runStatistic :: Statistic -> Noise IO -> [Int] -> [Benchmark]
-runStatistic statistic noise = map runOne
-  where runOne size = 
+runStatistic
+  :: Statistic
+  -> Noise IO
+  -> [Int]
+  -> [Benchmark]
+runStatistic statistic noise sizes =
+  [ bgroup "seq" (map (runOne statistic) sizes)
+  , bgroup "par" (map (runOne (parallelize statistic)) sizes)
+  ]
+  where runOne stat size = 
           env (runWithCreate $ takeNoise size noise) $ \input -> 
-            bench (show size) $ nf statistic (input)
+            bench (show size) $ nf stat input
+
+parallelize :: Statistic -> Statistic
+parallelize statistic = withStrategy (parBuffer 50 rdeepseq) . statistic
