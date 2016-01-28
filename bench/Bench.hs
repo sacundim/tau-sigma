@@ -17,9 +17,10 @@ import qualified Pipes.Prelude as P
 import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import TauSigma.Statistics.Types
-import TauSigma.Statistics.Allan (adevs)
+import TauSigma.Statistics.Allan (adevs, mdevs)
 import TauSigma.Statistics.Hadamard (hdevs)
-import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
+import TauSigma.Statistics.Total (totdevs)
+import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs, theoHdevs)
 
 import TauSigma.Util.Pipes.Noise
   ( TimeData
@@ -41,9 +42,12 @@ main :: IO ()
 main = defaultMain tests
   where tests = [ noiseTests
                 , adevTests
+                , mdevTests
                 , hdevTests
+                , totdevTests
                 , theo1Tests
                 , theoBRTests
+                , theoHTests
                 ]
 
 
@@ -84,9 +88,21 @@ adevTests = bgroup "adev" (runStatistic statistic wfm sizes)
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [50, 500, 5000]
 
+mdevTests :: Benchmark
+mdevTests = bgroup "mdev" (runStatistic statistic wfm sizes)
+  where statistic = mdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
+
 hdevTests :: Benchmark
 hdevTests = bgroup "hdev" (runStatistic statistic wfm sizes)
   where statistic = hdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [50, 500, 5000]
+
+totdevTests :: Benchmark
+totdevTests = bgroup "totdev" (runStatistic statistic wfm sizes)
+  where statistic = totdevs 1
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [50, 500, 5000]
 
@@ -101,6 +117,13 @@ theoBRTests = bgroup "theoBR" (runStatistic statistic wfm sizes)
   where statistic = theoBRdevs 1
         wfm = whiteFrequency 1.0 >-> toPhase
         sizes = [200, 400, 600]
+
+theoHTests :: Benchmark
+theoHTests = bgroup "theoH" (runStatistic statistic wfm sizes) 
+  where statistic = theoHdevs 1
+        wfm = whiteFrequency 1.0 >-> toPhase
+        sizes = [200, 400, 600]
+
 
 runStatistic
   :: Statistic
