@@ -90,6 +90,8 @@ one of the very earliest successful precision watches.  Read more in
 
 ![Arnold #36 TheoBR](images/arnold36_theoh.png)
 
+(The discontinuity evident around 3.4e1 on the x axis is the switch point of the TheoH hybrid statistic, which is ADEV at short averaging intervals and TheoBR at longer ones.)
+
 Daily Rates                             | Time error                         
 ----------------------------------------|------------------------------------
 ![rates](images/arnold36_frequency.png) | ![phase](images/arnold36_phase.png)
