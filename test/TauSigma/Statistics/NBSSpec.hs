@@ -38,7 +38,7 @@ spec = do
       it "tau = 1" $ totdev 1 1 `shouldBeAbout` 91.22945
       it "tau = 2" $ totdev 1 2 `shouldBeAbout` 93.90379
 
-  where shouldBeAbout = comparison nbsData 5.0e-5
+  where shouldBeAbout = comparison nbsData 4.0e-6
 
 
 -- | NBS Monograph 140, Annex 8.E Test Data

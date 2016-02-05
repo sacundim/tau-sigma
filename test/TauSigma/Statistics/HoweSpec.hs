@@ -29,7 +29,7 @@ spec = do
     describe "Theo1 DEV" $ do
       it "m = 10" $ do
         let (tau, sigma) = fromJust $ theo1dev 86400 10 howeData
-        sigma `shouldBeAbout` (7.66e-15, 1e-17)
+        sigma `shouldBeAbout` (7.66e-15, 7e-18)
 
 actual `shouldBeAbout` (expected, tolerance)  =
   unless (delta <= tolerance) (expectationFailure message)
