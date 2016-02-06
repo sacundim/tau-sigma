@@ -27,18 +27,19 @@ import Control.Lens (over, _2, _Just)
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
+import qualified Data.Vector.Unboxed as U
 
 import TauSigma.Statistics.Allan (avar, avars)
 import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
 
 
-theo1Tau :: Fractional a => Tau0 a -> Int -> Maybe (Tau a)
+theo1Tau :: Tau0 Double -> Int -> Maybe (Tau Double)
 theo1Tau tau0 m
   | even m && 10 <= m = Just (unsafeTheo1Tau tau0 m)
   | otherwise         = Nothing
 
-unsafeTheo1Tau :: Fractional a => Tau0 a -> Int -> Tau a
+unsafeTheo1Tau :: Tau0 Double -> Int -> Tau Double
 unsafeTheo1Tau tau0 m = 0.75 * fromIntegral m * tau0
 
 
@@ -52,8 +53,8 @@ theo1Steps size = filter (flip isTheo1Step size) [1 .. 3 * (size `div` 4)]
 
 
 theo1var
-  :: (Fractional a, Vector v a) =>
-     Tau0 a -> Int -> v (Time a) -> Maybe (TauSigma a)
+  :: (Vector v Double) =>
+     Tau0 Double -> Int -> v (Time Double) -> Maybe (TauSigma Double)
 {-# INLINABLE theo1var #-}
 theo1var tau0 m xs
   | m `isTheo1Step` V.length xs =
@@ -61,26 +62,27 @@ theo1var tau0 m xs
   | otherwise = Nothing
 
 theo1dev
-  :: (Floating a, Vector v a) =>
-     Tau0 a -> Int -> v (Time a) -> Maybe (TauSigma a)
+  :: (Vector v Double) =>
+     Tau0 Double -> Int -> v (Time Double) -> Maybe (TauSigma Double)
 {-# INLINABLE theo1dev #-}
 theo1dev tau0 m xs = over (_Just . _2) sqrt (theo1var tau0 m xs)
 
-theo1vars :: (Fractional a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
+theo1vars :: (Vector v Double) => AllTau v
 {-# INLINABLE theo1vars #-}
+{-# SPECIALIZE theo1vars :: AllTau U.Vector #-}
 theo1vars tau0 xs = map go (theo1Steps size)
   where size = V.length xs
         go m = (unsafeTheo1Tau tau0 m, unsafeTheo1var tau0 m xs)
 
-theo1devs :: (Floating a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
+theo1devs :: (Vector v Double) => AllTau v
 {-# INLINABLE theo1devs #-}
+{-# SPECIALIZE theo1devs :: AllTau U.Vector #-}
 theo1devs tau0 xs = over (traverse . _2) sqrt (theo1vars tau0 xs)
 
 
-unsafeTheo1var
-  :: (Fractional a, Vector v a) =>
-     Tau0 a -> Int -> v (Time a) -> Sigma a
+unsafeTheo1var :: (Vector v Double) => OneTau v
 {-# INLINABLE unsafeTheo1var #-}
+{-# SPECIALIZE unsafeTheo1var :: OneTau U.Vector #-}
 unsafeTheo1var tau0 m xs = outer / (0.75 * divisor)
   where divisor = (len - m') * (m' * tau0)^2
           where m' = fromIntegral m
@@ -92,19 +94,16 @@ unsafeTheo1var tau0 m xs = outer / (0.75 * divisor)
                                 term = (xs!i - xs!(i - d + halfM))
                                      + (xs!(i+m) -xs!(i + d + halfM))
 
-unsafeTheo1dev
-  :: (Floating a, Vector v a) =>
-     Tau0 a -> Int -> v (Time a) -> Sigma a
+unsafeTheo1dev :: (Vector v Double) => OneTau v
 {-# INLINABLE unsafeTheo1dev #-}
+{-# SPECIALIZE unsafeTheo1dev :: OneTau U.Vector #-}
 unsafeTheo1dev tau0 m xs = sqrt (unsafeTheo1var tau0 m xs)
 
 
 -- | Bias-reduced Theo1 variance.  
-theoBRvars
-  :: forall v a.
-     (RealFrac a, Vector v a) =>
-     Tau0 a -> v (Time a) -> [TauSigma a]
+theoBRvars :: (Vector v Double) => AllTau v
 {-# INLINABLE theoBRvars #-}
+{-# SPECIALIZE theoBRvars :: AllTau U.Vector #-}
 theoBRvars tau0 xs
   | n > 0 = map go (theo1Steps (V.length xs))
   | otherwise = []
@@ -112,7 +111,7 @@ theoBRvars tau0 xs
     n :: Int
     n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
 
-    go :: Int -> TauSigma a
+    go :: Int -> TauSigma Double
     go m = (tau, sigma)
       where
         tau = 0.75 * fromIntegral m * tau0
@@ -124,16 +123,16 @@ theoBRvars tau0 xs
                            / unsafeTheo1var tau0 (12 + 4*i) xs
 
 
-theoBRdevs
-  :: (Floating a, RealFrac a, Vector v a) =>
-     Tau0 a -> v (Time a) -> [TauSigma a]
+theoBRdevs :: (Vector v Double) => AllTau v
 {-# INLINABLE theoBRdevs #-}
+{-# SPECIALIZE theoBRdevs :: AllTau U.Vector #-}
 theoBRdevs tau0 xs = over (traverse . _2) sqrt (theoBRvars tau0 xs)
 
 
                            
-theoHvars :: (RealFrac a, Vector v a) => Tau0 a -> v (Time a) -> [TauSigma a]
+theoHvars :: (Vector v Double) => AllTau v
 {-# INLINABLE theoHvars #-}
+{-# SPECIALIZE theoHvars :: AllTau U.Vector #-}
 theoHvars tau0 xs = mergeOn fst allans theoBRs
   where k = fromIntegral (V.length xs `div` 10) * tau0
         allans = filter cutoff (avars tau0 xs)
@@ -148,9 +147,8 @@ mergeOn f xs'@(x:xs) ys'@(y:ys)
   | f x <= f y = x : mergeOn f xs ys'
   | otherwise = y : mergeOn f xs' ys
 
-theoHdevs
-  :: (RealFrac a, Floating a, Vector v a) =>
-     Tau0 a -> v (Time a) -> [TauSigma a]
+theoHdevs :: (Vector v Double) => AllTau v
 {-# INLINABLE theoHdevs #-}
+{-# SPECIALIZE theoHdevs :: AllTau U.Vector #-}
 theoHdevs tau0 xs = over (traverse . _2) sqrt (theoHvars tau0 xs)
 

@@ -10,7 +10,7 @@ module TauSigma.Statistics.SlopeTest
        ) where
 
 import Data.Tagged
-import Data.Vector (Vector)
+import Data.Vector.Unboxed (Vector)
 
 import Pipes
 import qualified Pipes.Prelude as P

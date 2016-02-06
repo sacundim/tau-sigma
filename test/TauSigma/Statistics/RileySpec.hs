@@ -47,7 +47,7 @@ spec = do
       it "tau = 10"  $ totdev 1  10 `shouldBeAbout` 9.134743e-02
       it "tau = 100" $ totdev 1 100 `shouldBeAbout` 3.406530e-02
 
-  where shouldBeAbout = comparison rileyData 5.0e-7
+  where shouldBeAbout = comparison rileyData 2.5e-7
 
 
 -- | Riley's test data (http://www.wriley.com/tst_suit.dat).
