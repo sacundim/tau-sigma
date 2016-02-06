@@ -5,6 +5,7 @@
 --
 -- * http://tf.nist.gov/timefreq/general/pdf/1990.pdf
 -- * http://tf.nist.gov/general/pdf/2220.pdf
+-- * http://tf.nist.gov/general/pdf/2262.pdf
 module TauSigma.Statistics.Theo1
        ( module TauSigma.Statistics.Types
 
@@ -109,25 +110,34 @@ theoBRvars tau0 xs
   | otherwise = []
   where
     n :: Int
-    n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
+    (n, bias) = theoBRBias tau0 xs
 
     go :: Int -> TauSigma Double
     go m = (tau, sigma)
       where
         tau = 0.75 * fromIntegral m * tau0
-        sigma = (ratio * theo1) / fromIntegral (n+1)
-          where
-            theo1 = unsafeTheo1var tau0 m xs
-            ratio = summation "ratio" 0 (n+1) term
-              where term i = avar tau0 (9 + 3*i) xs
-                           / unsafeTheo1var tau0 (12 + 4*i) xs
+        sigma = (bias * theo1) / fromIntegral (n+1)
+          where theo1 = unsafeTheo1var tau0 m xs
+
+theoBRBias
+  :: (Vector v Double) =>
+     Tau0 Double
+  -> v Double
+  -> (Int, Double)
+{-# INLINE theoBRBias #-}
+theoBRBias tau0 xs = (n, summation "bias" 0 (n+1) term)
+  where n :: Int
+        n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
+
+        term :: Int -> Double
+        term i = avar tau0 (9 + 3*i) xs
+               / unsafeTheo1var tau0 (12 + 4*i) xs
 
 
 theoBRdevs :: (Vector v Double) => AllTau v
 {-# INLINABLE theoBRdevs #-}
 {-# SPECIALIZE theoBRdevs :: AllTau U.Vector #-}
 theoBRdevs tau0 xs = over (traverse . _2) sqrt (theoBRvars tau0 xs)
-
 
                            
 theoHvars :: (Vector v Double) => AllTau v
