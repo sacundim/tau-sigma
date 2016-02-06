@@ -30,10 +30,18 @@ import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 import qualified Data.Vector.Unboxed as U
 
+import Numeric.Sum (kbn, sumVector)
+
 import TauSigma.Statistics.Allan (avar, avars)
 import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
 
+
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+--
+-- Utility functions
+-- 
 
 theo1Tau :: Tau0 Double -> Int -> Maybe (Tau Double)
 theo1Tau tau0 m
@@ -52,6 +60,12 @@ isTheo1Step m size = even m && 10 <= m && m <= size - 1
 theo1Steps :: Int -> [Int]
 theo1Steps size = filter (flip isTheo1Step size) [1 .. 3 * (size `div` 4)]
 
+
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+--
+-- Theo1
+-- 
 
 theo1var
   :: (Vector v Double) =>
@@ -101,6 +115,12 @@ unsafeTheo1dev :: (Vector v Double) => OneTau v
 unsafeTheo1dev tau0 m xs = sqrt (unsafeTheo1var tau0 m xs)
 
 
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+--
+-- TheoBR
+-- 
+
 -- | Bias-reduced Theo1 variance.  
 theoBRvars :: (Vector v Double) => AllTau v
 {-# INLINABLE theoBRvars #-}
@@ -110,7 +130,10 @@ theoBRvars tau0 xs
   | otherwise = []
   where
     n :: Int
-    (n, bias) = theoBRBias tau0 xs
+    n = theoBR_N (V.length xs)
+
+    bias :: Double
+    bias = theoBRBias tau0 xs
 
     go :: Int -> TauSigma Double
     go m = (tau, sigma)
@@ -119,27 +142,84 @@ theoBRvars tau0 xs
         sigma = (bias * theo1) / fromIntegral (n+1)
           where theo1 = unsafeTheo1var tau0 m xs
 
+theoBRdevs :: (Vector v Double) => AllTau v
+{-# INLINABLE theoBRdevs #-}
+{-# SPECIALIZE theoBRdevs :: AllTau U.Vector #-}
+theoBRdevs tau0 xs = over (traverse . _2) sqrt (theoBRvars tau0 xs)
+
+
+-- | The "n" value used in various places of the TheoBR calculation,
+-- which is a function of the size of the input data set.
+theoBR_N :: Int -> Int
+{-# INLINE theoBR_N #-}
+theoBR_N size = floor (((0.1 * fromIntegral size) / 3) - 3)
+
+
+-- | Smart estimate of TheoBR bias, using 'fastTheoBRBias' with an
+-- automatically selected value for the Bias Average.
 theoBRBias
   :: (Vector v Double) =>
-     Tau0 Double
-  -> v Double
-  -> (Int, Double)
-{-# INLINE theoBRBias #-}
-theoBRBias tau0 xs = (n, summation "bias" 0 (n+1) term)
+     Tau0 Double  -- ^ Sampling interval
+  -> v Double     -- ^ Time error samples
+  -> Double       -- ^ The @n@ value and the bias
+theoBRBias tau0 xs
+  | V.length xs < 2 = slowTheoBRBias tau0 xs
+  | otherwise = fastTheoBRBias ba tau0 xs
+  where
+    -- We grow the Bias Average logarithmically with the size of the
+    -- data set.
+    ba = max 1 (floor (logBase 4 (fromIntegral (V.length xs))))
+
+
+-- | Fast TheoBR bias estimation, based on:
+--
+-- Taylor, Jennifer A. and David A. Howe.  2010.  "Fast TheoBR: A
+-- Method for Long Data Set Stability Analysis."  /IEEE Transactions
+-- on Ultrasonics, Ferroelectrics and Frequency Control/, Vol. 57,
+-- No. 9 (Sep. 2010).
+--
+fastTheoBRBias
+  :: forall v. (Vector v Double) =>
+     Int          -- ^ Bias Average
+  -> Tau0 Double  -- ^ Sampling interval
+  -> v Double     -- ^ Time error samples
+  -> Double       -- ^ The @n@ value and the bias
+fastTheoBRBias ba tau0 xs = biasBA + 0.00055 * fromIntegral (ba - 1)
+  where
+    averages = chunkAvg ba xs
+    biasBA = slowTheoBRBias (fromIntegral ba * tau0) averages
+    
+
+-- | Split the vector into chunks of length @ba@ and average each one.
+chunkAvg :: (Vector v Double) => Int -> v Double -> v Double
+{-# INLINE chunkAvg #-}
+chunkAvg ba xs = V.generate (V.length xs `div` ba) term
+  where term i = sumVector kbn (V.slice (i*ba) ba xs) / fromIntegral ba
+
+-- | Regular TheoBR bias computation.  Very slow!
+slowTheoBRBias
+  :: (Vector v Double) =>
+     Tau0 Double  -- ^ Sampling interval
+  -> v Double     -- ^ Time error samples
+  -> Double       -- ^ The @n@ value and the bias
+slowTheoBRBias tau0 xs = summation "bias" 0 (n+1) term
   where n :: Int
-        n = floor (((0.1 * fromIntegral (V.length xs)) / 3) - 3)
+        n = theoBR_N (V.length xs)
 
         term :: Int -> Double
         term i = avar tau0 (9 + 3*i) xs
                / unsafeTheo1var tau0 (12 + 4*i) xs
 
 
-theoBRdevs :: (Vector v Double) => AllTau v
-{-# INLINABLE theoBRdevs #-}
-{-# SPECIALIZE theoBRdevs :: AllTau U.Vector #-}
-theoBRdevs tau0 xs = over (traverse . _2) sqrt (theoBRvars tau0 xs)
 
                            
+
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+--
+-- TheoH
+-- 
+
 theoHvars :: (Vector v Double) => AllTau v
 {-# INLINABLE theoHvars #-}
 {-# SPECIALIZE theoHvars :: AllTau U.Vector #-}
