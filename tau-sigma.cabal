@@ -19,9 +19,9 @@ library
   default-language:    Haskell2010
   hs-source-dirs:      src
   if flag(core)
-    Ghc-Options:         -Wall -O -ddump-simpl -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications -dsuppress-uniques -dsuppress-module-prefixes
+    Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O -ddump-simpl -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications -dsuppress-uniques -dsuppress-module-prefixes
   else
-    Ghc-Options:         -Wall -O
+    Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O
 
   exposed-modules:     TauSigma.ADEV
                      , TauSigma.Chart
@@ -68,7 +68,7 @@ library
 executable tau-sigma
   default-language:    Haskell2010
   hs-source-dirs:      app
-  Ghc-Options:         -Wall -O -threaded -rtsopts -with-rtsopts=-N
+  Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O -threaded -rtsopts -with-rtsopts=-N
   main-is:             Main.hs
   build-depends:       base >=4.7 && <5
                      , mtl
@@ -82,9 +82,9 @@ Test-Suite spec
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      test
   if flag(core)
-    Ghc-Options:         -Wall -O -ddump-simpl -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications -dsuppress-uniques -dsuppress-module-prefixes
+    Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O -ddump-simpl -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications -dsuppress-uniques -dsuppress-module-prefixes
   else
-    Ghc-Options:         -Wall -O
+    Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O
   Main-Is:             Spec.hs
   Build-Depends:       base >=4.7 && <5
                      , data-default 
@@ -103,9 +103,9 @@ Benchmark bench
   Default-Language:    Haskell2010
   Hs-Source-Dirs:      bench
   if flag(core)
-    Ghc-Options:         -Wall -O -threaded -rtsopts -with-rtsopts=-N -fprof-auto -ddump-simpl -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications -dsuppress-uniques -dsuppress-module-prefixes
+    Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O -threaded -rtsopts -with-rtsopts=-N -fprof-auto -ddump-simpl -dsuppress-idinfo -dsuppress-coercions -dsuppress-type-applications -dsuppress-uniques -dsuppress-module-prefixes
   else
-    Ghc-Options:         -Wall -O -threaded -rtsopts -with-rtsopts=-N -fprof-auto
+    Ghc-Options:         -Wall -fno-warn-type-defaults -fno-warn-name-shadowing -O -threaded -rtsopts -with-rtsopts=-N -fprof-auto
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , criterion
