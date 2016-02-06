@@ -26,18 +26,16 @@ import Control.Lens (over, _2)
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
+import qualified Data.Vector.Unboxed as U
 
 import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
 
 
 -- | Overlapped estimator of Allan variance at one sampling interval.
-avar :: (Vector v Double) =>
-        Tau0 Double
-     -> Int
-     -> v (Time Double)
-     -> Sigma Double
+avar :: (Vector v Double) => OneTau v
 {-# INLINABLE avar #-}
+{-# SPECIALIZE avar :: OneTau U.Vector #-}
 avar tau0 m xs = sumsq 0 (V.length xs - 2*m) term / divisor
   where divisor = 2 * m'^2 * tau0^2 * (len - 2*m')
           where m' = fromIntegral m
@@ -45,30 +43,30 @@ avar tau0 m xs = sumsq 0 (V.length xs - 2*m) term / divisor
         term i  = xs!(i+2*m) - 2*(xs!(i+m)) + xs!i
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
-adev :: (Vector v Double) =>
-        Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+adev :: (Vector v Double) => OneTau v
 {-# INLINABLE adev #-}
+{-# SPECIALIZE adev :: OneTau U.Vector #-}
 adev tau0 m xs = sqrt (avar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
-avars :: (Vector v Double) =>
-         Tau0 Double -> v (Time Double) -> [TauSigma Double]
+avars :: (Vector v Double) => AllTau v
 {-# INLINABLE avars #-}
+{-# SPECIALIZE avars :: AllTau U.Vector #-}
 avars tau0 xs = map go taus
   where taus = [1 .. (V.length xs - 1) `div` 2]
         go m = (fromIntegral m * tau0, avar tau0 m xs)
 
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
-adevs :: (Vector v Double) =>
-         Tau0 Double -> v (Time Double) -> [TauSigma Double]
+adevs :: (Vector v Double) => AllTau v
 {-# INLINABLE adevs #-}
+{-# SPECIALIZE adevs :: AllTau U.Vector #-}
 adevs tau0 xs = over (traverse . _2) sqrt (avars tau0 xs)
 
 
 -- | Estimator of Modified Allan variance at one sampling interval.
-mvar :: (Vector v Double) =>
-        Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+mvar :: (Vector v Double) => OneTau v
 {-# INLINABLE mvar #-}
+{-# SPECIALIZE mvar :: OneTau U.Vector #-}
 {- FIXME: slow... -}
 mvar tau0 m xs = outer / divisor
   where
@@ -79,43 +77,43 @@ mvar tau0 m xs = outer / divisor
       where inner j = summation "mvar" j (j + m) term
               where term i = xs!(i+2*m) - 2*(xs!(i+m)) + xs!i
 
-mdev :: (Vector v Double) =>
-        Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+mdev :: (Vector v Double) => OneTau v
 {-# INLINABLE mdev #-}
+{-# SPECIALIZE mdev :: OneTau U.Vector #-}
 mdev tau0 m xs = sqrt (mvar tau0 m xs)
 
-mvars :: (Vector v Double) =>
-         Tau0 Double -> v (Time Double) -> [TauSigma Double]
+mvars :: (Vector v Double) => AllTau v
 {-# INLINABLE mvars #-}
+{-# SPECIALIZE mvars :: AllTau U.Vector #-}
 mvars tau0 xs = map go taus
   where taus = [1 .. (V.length xs - 1) `div` 3]
         go m = (fromIntegral m * tau0, mvar tau0 m xs)
                     
-mdevs :: (Vector v Double) =>
-         Tau0 Double -> v (Time Double) -> [TauSigma Double]
+mdevs :: (Vector v Double) => AllTau v
 {-# INLINABLE mdevs #-}
+{-# SPECIALIZE mdevs :: AllTau U.Vector #-}
 mdevs tau0 xs = over (traverse . _2) sqrt (mvars tau0 xs)
 
 
-tvar :: (Vector v Double) =>
-        Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+tvar :: (Vector v Double) => OneTau v
 {-# INLINABLE tvar #-}
+{-# SPECIALIZE tvar :: OneTau U.Vector #-}
 tvar tau0 m xs = mvar2tvar (tau0 * fromIntegral m) (mvar tau0 m xs)
 
-tdev :: (Vector v Double) =>
-        Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+tdev :: (Vector v Double) => OneTau v
 {-# INLINABLE tdev #-}
+{-# SPECIALIZE tdev :: OneTau U.Vector #-}
 tdev tau0 m xs = sqrt (tvar tau0 m xs)
 
-tvars :: (Vector v Double) =>
-         Tau0 Double -> v (Time Double) -> [TauSigma Double]
+tvars :: (Vector v Double) => AllTau v
 {-# INLINABLE tvars #-}
+{-# SPECIALIZE tvars :: AllTau U.Vector #-}
 tvars tau0 xs = map go (mvars tau0 xs)
   where go (tau, sigma) = (tau, mvar2tvar tau sigma)
                     
-tdevs :: (Vector v Double) =>
-         Tau0 Double -> v (Time Double) -> [TauSigma Double]
+tdevs :: (Vector v Double) => AllTau v
 {-# INLINABLE tdevs #-}
+{-# SPECIALIZE tdevs :: AllTau U.Vector #-}
 tdevs tau0 xs = over (traverse . _2) sqrt (tvars tau0 xs)
 
 mvar2tvar :: Tau Double -> Sigma Double -> Sigma Double

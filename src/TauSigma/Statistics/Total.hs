@@ -21,6 +21,7 @@ import Control.Lens (over, _2)
 
 import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
+import qualified Data.Vector.Unboxed as U
 
 import TauSigma.Statistics.Types
 import TauSigma.Statistics.Util
@@ -38,9 +39,9 @@ xs !* i
 infixl 9 !*
 
 -- | TOTVAR estimator at one sampling interval.
-totvar :: (Vector v Double) =>
-          Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+totvar :: (Vector v Double) => OneTau v
 {-# INLINABLE totvar #-}
+{-# SPECIALIZE totvar :: OneTau U.Vector #-}
 totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / divisor
   where divisor = 2 * m'^2 * tau0^2 * (len - 2)
           where m' = fromIntegral m
@@ -49,24 +50,24 @@ totvar tau0 m xs = sumsq 0 (V.length xs - 1) term / divisor
           where i = notI+1
 
 -- | Overlapped estimator of Allan deviation at one sampling interval.
-totdev :: (Vector v Double) =>
-          Tau0 Double -> Int -> v (Time Double) -> Sigma Double
+totdev :: (Vector v Double) => OneTau v
 {-# INLINABLE totdev#-}
+{-# SPECIALIZE totdev :: OneTau U.Vector #-}
 totdev tau0 m xs = sqrt (totvar tau0 m xs)
 
 -- | Overlapped estimator of Allan variance at all sampling intervals.
-totvars :: (Vector v Double) =>
-           Tau0 Double -> v (Time Double) -> [TauSigma Double]
+totvars :: (Vector v Double) => AllTau v
 {-# INLINABLE totvars #-}
+{-# SPECIALIZE totvars :: AllTau U.Vector #-}
 totvars tau0 xs = map go taus
   where taus = [1 .. V.length xs - 2]
         go m = (fromIntegral m * tau0, totvar tau0 m xs)
 
                     
 -- | Overlapped estimator of Allan deviation at all sampling intervals.
-totdevs :: (Vector v Double) =>
-           Tau0 Double -> v (Time Double) -> [TauSigma Double]
+totdevs :: (Vector v Double) => AllTau v
 {-# INLINABLE totdevs #-}
+{-# SPECIALIZE totdevs :: AllTau U.Vector #-}
 totdevs tau0 xs = over (traverse . _2) sqrt (totvars tau0 xs)
 
 
