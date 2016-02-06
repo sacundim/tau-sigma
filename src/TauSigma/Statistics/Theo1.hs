@@ -30,6 +30,7 @@ import Data.Vector.Generic (Vector, (!))
 import qualified Data.Vector.Generic as V
 import qualified Data.Vector.Unboxed as U
 
+import Math.NumberTheory.Powers (integerCubeRoot)
 import Numeric.Sum (kbn, sumVector)
 
 import TauSigma.Statistics.Allan (avar, avars)
@@ -163,12 +164,11 @@ theoBRBias
   -> v Double     -- ^ Time error samples
   -> Double       -- ^ The @n@ value and the bias
 theoBRBias tau0 xs
-  | V.length xs < 2 = slowTheoBRBias tau0 xs
+  | V.length xs `div` ba < 100 = slowTheoBRBias tau0 xs
   | otherwise = fastTheoBRBias ba tau0 xs
   where
-    -- We grow the Bias Average logarithmically with the size of the
-    -- data set.
-    ba = max 1 (floor (logBase 4 (fromIntegral (V.length xs))))
+    -- We grow the Bias Average with the size of the data set.
+    ba = integerCubeRoot (V.length xs)
 
 
 -- | Fast TheoBR bias estimation, based on:
