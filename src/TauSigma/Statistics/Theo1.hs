@@ -38,7 +38,7 @@ theo1Tau tau0 m
   | even m && 10 <= m = Just (unsafeTheo1Tau tau0 m)
   | otherwise         = Nothing
 
-unsafeTheo1Tau :: Fractional a => Tau0 Double -> Int -> Tau Double
+unsafeTheo1Tau :: Tau0 Double -> Int -> Tau Double
 unsafeTheo1Tau tau0 m = 0.75 * fromIntegral m * tau0
 
 
