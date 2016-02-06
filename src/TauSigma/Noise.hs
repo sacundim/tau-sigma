@@ -9,7 +9,6 @@ module TauSigma.Noise
        , main
        ) where
 
-import Control.Applicative
 import Control.Lens
 
 -- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
@@ -21,7 +20,6 @@ import Data.Functor.Compose (Compose(..))
 import Data.Csv (Only(..))
 import Data.Default
 import Data.Maybe (catMaybes)
-import Data.Monoid (mconcat)
 
 import Options.Applicative
 

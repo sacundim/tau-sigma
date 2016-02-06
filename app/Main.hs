@@ -9,7 +9,6 @@ import Data.Version (showVersion)
     
 import Options.Applicative
 
-import System.Environment (getArgs)
 import System.Exit
 import System.IO (hPutStrLn, stderr)
 

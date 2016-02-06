@@ -34,11 +34,11 @@ data Domain = Phase | Frequency deriving Read
 
 -- | A tagged type to represent time domain data values, to avoid mixing
 -- them up with frequency domain data.
-type TimeData = Tagged Phase
+type TimeData = Tagged 'Phase
 
 -- | A newtype to represent frequency domain data values, to avoid
 -- mixing them up with time domain data.
-type FreqData = Tagged Frequency
+type FreqData = Tagged 'Frequency
 
 
 

@@ -6,7 +6,6 @@ module TauSigma.Convert
          main
        ) where
 
-import Control.Applicative
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
 

@@ -19,7 +19,6 @@ import Control.Lens.TH
 
 import Control.Parallel.Strategies (withStrategy, parBuffer, rdeepseq)
 
-import Data.Maybe (fromMaybe)
 import Data.Csv (HasHeader(..), fromOnly)
 
 import qualified Data.Vector as V

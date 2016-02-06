@@ -6,7 +6,6 @@ module TauSigma.Util.Pipes
 
 import Pipes
 import Pipes.Core
-import qualified Pipes.Prelude as P
 
 
 -- | Turn a 'Consumer' into a 'Pipe' that consumes the same input and

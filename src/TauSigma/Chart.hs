@@ -8,7 +8,6 @@ module TauSigma.Chart
        , loglog
        ) where
 
-import Control.Applicative
 import Control.Arrow ((***))
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
@@ -85,7 +84,7 @@ loglog opts = do
   raw <- P.toListM (decodeByName stdin)
   let points = over (traverse . tau) (/(view xunit opts)) raw
   let chart = logLogChart (view label opts) points
-  let size@(x, y) = logLogChartSize (800, 800) (NonEmpty.fromList points)
+  let size = logLogChartSize (800, 800) (NonEmpty.fromList points)
   liftIO $ writeSizedSVG opts size chart
 
 

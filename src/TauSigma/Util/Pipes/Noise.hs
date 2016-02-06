@@ -38,7 +38,6 @@ import Pipes
 import qualified Pipes.Prelude as P
 
 import System.Random.MWC.Monad (Rand)
-import qualified System.Random.MWC.Monad as Random
 import qualified System.Random.MWC.Distributions.Monad as Dist
 
 import TauSigma.Types
