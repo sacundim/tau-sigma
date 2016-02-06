@@ -6,10 +6,7 @@ import TauSigma.Statistics.Theo1 (theo1devs, theoBRdevs)
 import TauSigma.Statistics.SlopeTest
 
 import TauSigma.Util.Pipes.Noise
-  ( TimeData
-  , whitePhase
-  , flickerPhase
-  , whiteFrequency
+  ( whiteFrequency
   , flickerFrequency
   , randomWalkFrequency
   , toPhase

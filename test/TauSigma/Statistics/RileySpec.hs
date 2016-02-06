@@ -3,8 +3,6 @@
 -- /Handbook of Frequency Stability Analysis/.
 module TauSigma.Statistics.RileySpec where
 
-import Control.Monad (unless)
-
 import Data.Tagged
 import Data.Vector (Vector)
 import qualified Data.Vector as V

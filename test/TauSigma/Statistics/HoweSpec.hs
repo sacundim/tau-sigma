@@ -17,7 +17,6 @@ import qualified Data.Vector as V
 import Text.Printf (printf)
 
 import TauSigma.Types
-import TauSigma.Statistics.Util (integrate)
 import TauSigma.Statistics.Theo1 (theo1dev)
 
 import Test.Hspec
@@ -28,9 +27,10 @@ spec = do
   describe "Howe 2006, Appendix A" $ do
     describe "Theo1 DEV" $ do
       it "m = 10" $ do
-        let (tau, sigma) = fromJust $ theo1dev 86400 10 howeData
+        let (_, sigma) = fromJust $ theo1dev 86400 10 howeData
         sigma `shouldBeAbout` (7.66e-15, 7e-18)
 
+shouldBeAbout :: Double -> (Double, Double) -> Expectation
 actual `shouldBeAbout` (expected, tolerance)  =
   unless (delta <= tolerance) (expectationFailure message)
   where

@@ -11,6 +11,12 @@ import Text.Printf (printf)
 import Test.Hspec (Expectation, expectationFailure)
 
 
+comparison
+  :: Vector Double
+  -> Double
+  -> (Vector Double -> Double)
+  -> Double
+  -> Expectation
 comparison dataSet tolerance = shouldBeAbout
   where
     shouldBeAbout

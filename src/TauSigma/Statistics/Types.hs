@@ -8,8 +8,6 @@ module TauSigma.Statistics.Types
        , AllTau
        ) where
 
-import Data.Vector.Generic (Vector)
-
 
 -- | Type synonym for values that represent the smallest sampling
 -- interval in a data set.

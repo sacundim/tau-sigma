@@ -19,7 +19,7 @@ import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import Text.Printf
 
-import TauSigma.Statistics.Types (Tau, Sigma, TauSigma)
+import TauSigma.Statistics.Types (Tau, TauSigma)
 import TauSigma.Util.Pipes.Noise (TimeData)
 import TauSigma.Util.Vector (takeVector)
 
@@ -66,8 +66,6 @@ filterKeys :: Ord a => (Tau a, Tau a) -> [TauSigma a] -> [TauSigma a]
 filterKeys (lo,hi) = filter go
   where go (tau, _) = lo <= tau && tau <= hi 
 
-type Point = (Int, Double)
-
 badSlopes
   :: Slope
   -> Error
@@ -75,8 +73,8 @@ badSlopes
   -> [(Double, Double, Slope, Error)]
 badSlopes standard tolerance graph =
   [ (x0, x1, round slope, round err)
-  | (p0@(x0, y0), p1@(x1, y1)) <- withSuccessors (,) graph
-  , let slope = logSlope (x0, y0) (x1, y1)
+  | (p0@(x0, _), p1@(x1, _)) <- withSuccessors (,) graph
+  , let slope = logSlope p0 p1
   , let err = abs (slope - standard)
   , err > tolerance
   ]
