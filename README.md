@@ -179,4 +179,4 @@ in Unix and OS X systems).
   and Technology.
 * Tange, O.  2011.  "GNU Parallel - The Command-Line Power Tool."
   *;login: The USENIX Maganize*, vol. 36, No.1 (Feb. 2011), pp. 42-47.
-* Taylor, Jennifer A. and David A. Howe.  2010.  ["Fast TheoBR: A Method for Long Data Set Stability Analysys.*"(http://tf.nist.gov/general/pdf/2262.pdf)  *IEEE Transactions on Ultrasonics, Ferroelectrics and Frequency Control*, Vol. 57, No. 9 (Sep. 2010).
+* Taylor, Jennifer A. and David A. Howe.  2010.  ["Fast TheoBR: A Method for Long Data Set Stability Analysys.*"](http://tf.nist.gov/general/pdf/2262.pdf)  *IEEE Transactions on Ultrasonics, Ferroelectrics and Frequency Control*, Vol. 57, No. 9 (Sep. 2010).
