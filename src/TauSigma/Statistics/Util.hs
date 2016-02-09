@@ -4,6 +4,7 @@ module TauSigma.Statistics.Util
        ( integrate
        , differences
        , summation
+       , nestedSums
        , sumsq
        ) where
 
@@ -57,3 +58,12 @@ sumsq from to term
           | i < to    = go (subtotal `add` ((term i)^2)) (i+1)
           | otherwise = subtotal
 
+
+nestedSums :: Int -> Int -> (Int -> Int -> Double) -> Double
+{-# INLINE nestedSums #-}
+nestedSums n m term = kbn (go zero 0 0)
+  where go :: KBNSum -> Int -> Int -> KBNSum
+        go subtotal i j
+          | i >= n    = subtotal
+          | j >= m    = go subtotal (i+1) 0
+          | otherwise = go (subtotal `add` term i j) i (j+1)

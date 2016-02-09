@@ -72,6 +72,9 @@ options =
   , command "totdev"
       (info (ADEV ADEV.TOTDEV <$> ADEV.options)
        (progDesc "Compute TOTDEV"))
+  , command "theo1"
+      (info (ADEV ADEV.Theo1 <$> ADEV.options)
+       (progDesc "Compute TheoBR deviation"))
   , command "theobr"
       (info (ADEV ADEV.TheoBR <$> ADEV.options)
        (progDesc "Compute TheoBR deviation"))
