@@ -4,8 +4,9 @@
 
 This is a simple command-line utilty for analyzing the frequency
 stability of clocks in terms of their
-[**Allan deviation**](http://en.wikipedia.org/wiki/Allan_variance).
-It has the following subcommands:
+[**Allan deviation**](http://en.wikipedia.org/wiki/Allan_variance) and
+related statistics.
+
 
 ## Subcommands
 
@@ -20,10 +21,19 @@ Command            | Description
 `tau-sigma tdev`   | Time deviation
 `tau-sigma hdev`   | Hadamard deviation (overlapped estimator)
 `tau-sigma totdev` | Total deviation
+`tau-sigma theo1`  | Theo1 deviation
 `tau-sigma theobr` | TheoBR deviation (bias-reduced Theo1)
 `tau-sigma theoh`  | TheoH deviation (Allan at low taus, TheoBR at high taus)
 
 Output is CSV with "tau" and "sigma" column headers.
+
+I have not yet found good example data sets for the following two
+statistics, so they are supported **experimentally**:
+
+Command            | Description
+-------------------|---------------------------------------------------------
+`tau-sigma theobr` | TheoBR deviation (bias-reduced Theo1)
+`tau-sigma theoh`  | TheoH deviation (Allan at low taus, TheoBR at high taus)
 
 
 ### Charting
@@ -81,9 +91,9 @@ about the data in [`example-data/README.md`](example-data/README.md).
 
 ### Arnold #36 pocket chronometer
 
-I wrote this utilty to help me in my quest to understand the
-performance of historical precision timepieces.  Here's a fine
-example: the 1779/80 Greenwich trial of
+I wrote this utilty to help my efforts to understand the performance
+of historical precision timepieces.  Here's a fine example: the
+1779/80 Greenwich trial of
 [John Arnold's pocket chronometer #36](http://collections.rmg.co.uk/collections/objects/207131.html),
 one of the very earliest successful precision watches.  Read more in
 [`example-data/README.md`](example-data/README.md).
@@ -100,7 +110,9 @@ Daily Rates                             | Time error
 ## Performance and correctness
 
 This tool has so far been written primarily with simplicity and
-correctness in mind, not performance.
+correctness in mind, not performance.  The code for the statistical
+functions sticks very closely to the mathematical formulas in the
+reference materials.
 
 I do not warranty that the results of this program are always correct.
 Nevertheless, I have taken care to test that the results at least look
@@ -156,6 +168,7 @@ in Unix and OS X systems).
 
 ## References
 
+* Howe, D.A.  2000.  ["The Total Deviation Approach to Long-Term Characterization of Frequency Stability."](http://www.tf.nist.gov/timefreq/general/pdf/1362.pdf)  *IEEE Transactions on Ultrasonics, Ferroelectrics and Frequency Control*, Vol. 47, No. 5 (Sep. 2000).
 * Howe, D.A. 2006.
   ["TheoH: a hybrid, high-confidence statistic that improves on the Allan deviation."](http://www.tf.nist.gov/timefreq/general/pdf/2109.pdf)
   *Metrologia* 43 (2006) S322-331.
@@ -166,3 +179,4 @@ in Unix and OS X systems).
   and Technology.
 * Tange, O.  2011.  "GNU Parallel - The Command-Line Power Tool."
   *;login: The USENIX Maganize*, vol. 36, No.1 (Feb. 2011), pp. 42-47.
+* Taylor, Jennifer A. and David A. Howe.  2010.  ["Fast TheoBR: A Method for Long Data Set Stability Analysys.*"(http://tf.nist.gov/general/pdf/2262.pdf)  *IEEE Transactions on Ultrasonics, Ferroelectrics and Frequency Control*, Vol. 57, No. 9 (Sep. 2010).
