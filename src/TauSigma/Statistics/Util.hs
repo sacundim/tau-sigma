@@ -10,7 +10,6 @@ module TauSigma.Statistics.Util
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
-import qualified Data.Vector.Unboxed as U
 
 import Numeric.Sum (KBNSum, kbn, add, zero)
 
