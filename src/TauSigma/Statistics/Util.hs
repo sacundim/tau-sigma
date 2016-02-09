@@ -4,11 +4,13 @@ module TauSigma.Statistics.Util
        ( integrate
        , differences
        , summation
+       , nestedSums
        , sumsq
        ) where
 
 import Data.Vector.Generic (Vector)
 import qualified Data.Vector.Generic as V
+import qualified Data.Vector.Unboxed as U
 
 import Numeric.Sum (KBNSum, kbn, add, zero)
 
@@ -57,3 +59,12 @@ sumsq from to term
           | i < to    = go (subtotal `add` ((term i)^2)) (i+1)
           | otherwise = subtotal
 
+
+nestedSums :: Int -> Int -> (Int -> Int -> Double) -> Double
+{-# INLINE nestedSums #-}
+nestedSums n m term = kbn (go zero 0 0)
+  where go :: KBNSum -> Int -> Int -> KBNSum
+        go subtotal i j
+          | i >= n    = subtotal
+          | j >= m    = go subtotal (i+1) 0
+          | otherwise = go (subtotal `add` term i j) i (j+1)

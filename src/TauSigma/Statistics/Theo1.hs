@@ -99,16 +99,15 @@ theo1devs tau0 xs = over (traverse . _2) sqrt (theo1vars tau0 xs)
 unsafeTheo1var :: (Vector v Double) => OneTau v
 {-# INLINABLE unsafeTheo1var #-}
 {-# SPECIALIZE unsafeTheo1var :: OneTau U.Vector #-}
-unsafeTheo1var tau0 m xs = outer / (0.75 * divisor)
+unsafeTheo1var tau0 m xs = theSum / (0.75 * divisor)
   where divisor = (len - m') * (m' * tau0)^2
           where m' = fromIntegral m
                 len = fromIntegral (V.length xs)
-        outer = summation "outer" 0 (V.length xs - m) middle
-          where middle i = summation "middle" 0 (m `div` 2) inner
-                  where inner d = term^2 / fromIntegral (halfM - d)
-                          where halfM = m `div` 2
-                                term = (xs!i - xs!(i - d + halfM))
-                                     + (xs!(i+m) -xs!(i + d + halfM))
+        theSum = nestedSums (V.length xs - m) (m `div` 2) term
+          where term i d = term'^2 / fromIntegral ((m `div` 2) - d)
+                  where term' = (xs!i - xs!(i - d + (m `div` 2)))
+                              + (xs!(i+m) -xs!(i + d + (m `div` 2)))
+
 
 unsafeTheo1dev :: (Vector v Double) => OneTau v
 {-# INLINABLE unsafeTheo1dev #-}
