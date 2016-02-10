@@ -33,6 +33,8 @@ import Control.Monad (forever)
 import Control.Monad.Primitive 
 import Control.Monad.Primitive.Class (MonadPrim)
 
+import Data.Bits (countLeadingZeros)
+import Data.Word (Word64)
 import Data.Tagged
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as MU
@@ -81,11 +83,11 @@ flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
           r <- lift (Dist.normal 0.0 n)
           yield (r + next)
 
-decaying :: MonadPrim m => Int -> Rand m Int
-decaying n = go 0
-    where go i | i < n = do b <- Rand.uniform
-                            if b then return i else go (i+1)
-               | otherwise = return i
+decaying :: forall m. MonadPrim m => Int -> Rand m Int
+{-# INLINE decaying #-} 
+decaying n = fmap (min (n-1) . countLeadingZeros) word
+   where word :: Rand m Word64
+         word = Rand.uniform 
 
 sumMVector :: PrimMonad m => MU.MVector (PrimState m) Double -> m Double
 {-# INLINE sumMVector #-} 
