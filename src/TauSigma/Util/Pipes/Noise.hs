@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- | Utility pipes for generating various types of noise.
@@ -20,24 +21,29 @@ module TauSigma.Util.Pipes.Noise
     , toFrequency
     , toPhase
 
-    , hold
     , zipSum
     , integrate
     , differentiate
     ) where
 
-import Control.Monad (forever, replicateM_)
+import Control.Monad (forever)
 
 -- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
 -- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
 import Control.Monad.Primitive 
 import Control.Monad.Primitive.Class (MonadPrim)
 
+import Data.Bits (countLeadingZeros)
+import Data.Word (Word64)
 import Data.Tagged
+import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Unboxed.Mutable as MU
+
 import Pipes
 import qualified Pipes.Prelude as P
 
 import System.Random.MWC.Monad (Rand)
+import qualified System.Random.MWC.Monad as Rand
 import qualified System.Random.MWC.Distributions.Monad as Dist
 
 import TauSigma.Types
@@ -54,11 +60,41 @@ brown :: MonadPrim m => Double -> Producer Double (Rand m) ()
 brown n = white n >-> integrate
 
 -- | Flicker noise has 1/f power density, i.e., inversely proportional
--- to the frequency.  
-flicker :: MonadPrim m => Int -> Double -> Producer Double (Rand m) ()
+-- to the frequency.  This uses a variant of the Voss-McCartney
+-- algorithm.  Sources:
+--
+-- * http://www.firstpr.com.au/dsp/pink-noise/#Stochastic_Voss_McCartney
+-- * http://home.earthlink.net/%7Eltrammell/tech/pinkalg.htm
+flicker
+    :: forall m. (MonadPrim m, PrimMonad m) =>
+       Int
+    -> Double
+    -> Producer Double (Rand m) ()
 {-# INLINABLE flicker #-} 
-flicker octaves n = zipSum (map go [0..octaves])
-  where go o = white n >-> hold o
+flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
+  where
+    go :: MU.MVector (PrimState m) Double -> Producer Double (Rand m) ()
+    go state =
+        forever $ do
+          i <- lift (decaying octaves)
+          ri <- lift (Dist.normal 0.0 n)
+          lift (MU.write state i ri)
+          next <- lift (sumMVector state)
+          r <- lift (Dist.normal 0.0 n)
+          yield (r + next)
+
+-- | Choose an @i@ in the range @[0,n)@, with probability @0.5^(i+1)@.
+-- Well, except that @n-1@ gets picked inordinately often.
+decaying :: forall m. MonadPrim m => Int -> Rand m Int
+{-# INLINE decaying #-} 
+decaying n = fmap (min (n-1) . countLeadingZeros) word
+   where word :: Rand m Word64
+         word = Rand.uniform 
+
+sumMVector :: PrimMonad m => MU.MVector (PrimState m) Double -> m Double
+{-# INLINE sumMVector #-} 
+sumMVector v = fmap U.sum (U.unsafeFreeze v)
+      
 
 -- | Calculate the number of octaves in a sequence of the given size.
 -- Suitable for passing as argument to 'flicker' and 'flickerFrequency'.
@@ -81,7 +117,7 @@ whitePhase :: MonadPrim m => Double -> Producer (TimeData Double) (Rand m) ()
 whitePhase n = white n >-> P.map Tagged
 
 flickerPhase
-  :: MonadPrim m =>
+  :: (MonadPrim m, PrimMonad m) =>
      Int -> Double -> Producer (TimeData Double) (Rand m) ()
 {-# INLINABLE flickerPhase #-} 
 flickerPhase octaves n = flicker octaves n >-> P.map Tagged
@@ -92,7 +128,8 @@ whiteFrequency
 whiteFrequency n = white n >-> P.map Tagged
 
 flickerFrequency
-  :: MonadPrim m => Int -> Double -> Producer (FreqData Double) (Rand m) ()
+  :: (MonadPrim m, PrimMonad m) =>
+     Int -> Double -> Producer (FreqData Double) (Rand m) ()
 {-# INLINABLE flickerFrequency #-} 
 flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 
@@ -116,15 +153,6 @@ toPhase = P.map unTagged >-> integrate >-> P.map Tagged
 toFrequency :: (Monad m, Num a) => Pipe (TimeData a) (FreqData a) m r
 {-# INLINABLE toFrequency #-}
 toFrequency = P.map unTagged >-> differentiate >-> P.map Tagged
-
-
--- | Hold a signal for @2^octave@ ticks.  (Yes, higher number = lower
--- octave.)
-hold :: Monad m => Int -> Pipe a a m r
-{-# INLINE hold #-}
-hold octave = forever $ do
-  a <- await
-  replicateM_ (2^octave) (yield a)
 
 
 -- | Zip the given pipes, adding their outputs.
