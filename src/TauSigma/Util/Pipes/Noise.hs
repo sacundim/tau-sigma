@@ -83,6 +83,8 @@ flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
           r <- lift (Dist.normal 0.0 n)
           yield (r + next)
 
+-- | Choose an @i@ in the range @[0,n)@, with probability @0.5^(i+1)@.
+-- Well, except that @n-1@ gets picked inordinately often.
 decaying :: forall m. MonadPrim m => Int -> Rand m Int
 {-# INLINE decaying #-} 
 decaying n = fmap (min (n-1) . countLeadingZeros) word
