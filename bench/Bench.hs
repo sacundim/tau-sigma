@@ -9,12 +9,14 @@ import Control.Monad.Primitive (PrimMonad)
 import Control.Parallel.Strategies (withStrategy, parBuffer, rdeepseq)
 
 import Data.Tagged (Tagged(..))
+
+import Data.Random (RVarT, runRVarT)
+import Data.Random.Source.MWC (create)
+
 import qualified Data.Vector.Unboxed as U
 
 import Pipes
 import qualified Pipes.Prelude as P
-
-import System.Random.MWC.Monad (Rand, runWithCreate)
 
 import TauSigma.Statistics.Types
 import TauSigma.Statistics.Allan (adevs, mdevs)
@@ -36,7 +38,7 @@ import TauSigma.Util.Vector
 
 
 type Statistic = U.Vector (Time Double) -> [TauSigma Double]
-type Noise m = Producer (TimeData Double) (Rand m) ()
+type Noise m = Producer (TimeData Double) (RVarT m) ()
 
 main :: IO ()
 main = defaultMain tests
@@ -77,7 +79,7 @@ benchNoise :: Noise IO -> Int -> Benchmark
 benchNoise noise size =
   bench (show size) $ nfIO (runWithCreate $ takeNoise size noise)
 
-takeNoise :: PrimMonad m => Int -> Noise m -> Rand m (U.Vector Double)
+takeNoise :: PrimMonad m => Int -> Noise m -> RVarT m (U.Vector Double)
 takeNoise samples noise = takeVector samples (noise >-> P.map unTagged)
 
 
@@ -137,6 +139,9 @@ runStatistic statistic noise sizes =
   where runOne stat size = 
           env (runWithCreate $ takeNoise size noise) $ \input -> 
             bench (show size) $ nf stat input
+
+runWithCreate :: RVarT IO a -> IO a
+runWithCreate ma = runRVarT ma =<< create
 
 parallelize :: Statistic -> Statistic
 parallelize statistic = withStrategy (parBuffer 50 rdeepseq) . statistic
