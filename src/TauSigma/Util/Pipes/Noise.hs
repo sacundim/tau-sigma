@@ -66,16 +66,16 @@ flicker
     -> Double
     -> Producer Double (RVarT m) ()
 {-# INLINABLE flicker #-} 
-flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
-  where go state = forever (updateState >> yieldNext)
-            where updateState = do
-                    i <- lift (decaying octaves)
-                    ri <- lift (normalT 0.0 n)
-                    lift (MU.write state i ri)
-                  yieldNext = do
-                    next <- lift (sumMVector state)
-                    r <- lift (normalT 0.0 n)
-                    yield (r + next)
+flicker octaves n = lift (MU.replicate octaves 0.0) >>= flicker' 
+    where flicker' state = go 0.0
+              where go prev = do
+                      i   <- lift (decaying octaves)
+                      ri  <- lift (normalT 0.0 n)
+                      ri' <- lift (write' state i ri)
+                      let next = prev - ri' + ri 
+                      r   <- lift (normalT 0.0 n)
+                      yield (next + r)
+                      go next
 
 -- | Choose an @i@ in the range @[0,n)@, with probability @0.5^(i+1)@.
 -- Well, except that @n-1@ gets picked inordinately often.
@@ -85,10 +85,14 @@ decaying n = fmap (min (n-1) . countLeadingZeros) word
    where word :: RVarT m Word64
          word = stdUniformT
 
-sumMVector :: PrimMonad m => MU.MVector (PrimState m) Double -> m Double
-{-# INLINE sumMVector #-} 
-sumMVector v = fmap U.sum (U.unsafeFreeze v)
-      
+-- | Write to a mutable vector, but returning the value that was replaced.
+write'
+    :: (PrimMonad m, U.Unbox a) =>
+       MU.MVector (PrimState m) a -> Int -> a -> m a
+{-# INLINE write' #-}
+write' v i a = MU.read v i <* MU.write v i a
+         
+
 
 -- | Calculate the number of octaves in a sequence of the given size.
 -- Suitable for passing as argument to 'flicker' and 'flickerFrequency'.
