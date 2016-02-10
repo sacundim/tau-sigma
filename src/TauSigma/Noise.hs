@@ -19,7 +19,7 @@ import Data.Default
 import Data.Maybe (catMaybes)
 
 import Data.Random (RVarT, runRVarT)
-import Data.Random.Source.MWC (create)
+import System.Random.MWC (createSystemRandom)
     
 import Options.Applicative
 
@@ -126,7 +126,7 @@ options = Options <$> length <*> frequency <*> mix
                   
 
 main :: Options -> IO ()
-main opts = runRVarT main' =<< create -- FIXME
+main opts = runWithSystemRandom main'
   where main' :: RVarT IO ()
         main' = runEffect $ mixed (applyDefaults opts)
             >-> toOutputType (view outputType opts)
@@ -134,6 +134,9 @@ main opts = runRVarT main' =<< create -- FIXME
             >-> P.map Only
             >-> encode
             >-> stdout
+
+runWithSystemRandom :: RVarT IO a -> IO a
+runWithSystemRandom ma = runRVarT ma =<< createSystemRandom
 
 applyDefaults :: Options -> Options
 applyDefaults opts = over mix go opts
