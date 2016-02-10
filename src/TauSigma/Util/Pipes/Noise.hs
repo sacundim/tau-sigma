@@ -26,7 +26,7 @@ module TauSigma.Util.Pipes.Noise
     , differentiate
     ) where
 
-import Control.Monad (forever, forM_)
+import Control.Monad (forever)
 
 -- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
 -- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
@@ -43,6 +43,7 @@ import Pipes
 import qualified Pipes.Prelude as P
 
 import System.Random.MWC.Monad (Rand)
+import qualified System.Random.MWC.Monad as Rand
 import qualified System.Random.MWC.Distributions.Monad as Dist
 
 import TauSigma.Types
@@ -63,7 +64,7 @@ brown n = white n >-> integrate
 -- algorithm.  Sources:
 --
 -- * http://www.firstpr.com.au/dsp/pink-noise/#Stochastic_Voss_McCartney
---
+-- * http://home.earthlink.net/%7Eltrammell/tech/pinkalg.htm
 flicker
     :: forall m. (MonadPrim m, PrimMonad m) =>
        Int
@@ -74,14 +75,20 @@ flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
   where
     go :: MU.MVector (PrimState m) Double -> Producer Double (Rand m) ()
     go state =
-        forM_ [0 ..] $ \(counter :: Word32) -> do
-          let i = countTrailingZeros counter `rem` MU.length state
+        forever $ do
+          i <- lift (decaying octaves)
           ri <- lift (Dist.normal 0.0 n)
           lift (MU.write state i ri)
           next <- lift (sumMVector state)
           r <- lift (Dist.normal 0.0 n)
           yield (r + next)
-    
+
+decaying :: MonadPrim m => Int -> Rand m Int
+decaying n = go 0
+    where go i | i < n = do b <- Rand.uniform
+                            if b then return i else go (i+1)
+               | otherwise = return i
+
 sumMVector :: PrimMonad m => MU.MVector (PrimState m) Double -> m Double
 {-# INLINE sumMVector #-} 
 sumMVector v = fmap U.sum (U.unsafeFreeze v)

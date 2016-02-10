@@ -56,7 +56,7 @@ hdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (0.0)
-             , tolerance   = 0.05
+             , tolerance   = 0.065
              , statistic   = hdevs 1
              , noise       = ffm
              }
