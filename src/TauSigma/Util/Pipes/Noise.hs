@@ -67,15 +67,15 @@ flicker
     -> Producer Double (RVarT m) ()
 {-# INLINABLE flicker #-} 
 flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
-  where
-    go state =
-        forever $ do
-          i <- lift (decaying octaves)
-          ri <- lift (normalT 0.0 n)
-          lift (MU.write state i ri)
-          next <- lift (sumMVector state)
-          r <- lift (normalT 0.0 n)
-          yield (r + next)
+  where go state = forever (updateState >> yieldNext)
+            where updateState = do
+                    i <- lift (decaying octaves)
+                    ri <- lift (normalT 0.0 n)
+                    lift (MU.write state i ri)
+                  yieldNext = do
+                    next <- lift (sumMVector state)
+                    r <- lift (normalT 0.0 n)
+                    yield (r + next)
 
 -- | Choose an @i@ in the range @[0,n)@, with probability @0.5^(i+1)@.
 -- Well, except that @n-1@ gets picked inordinately often.
