@@ -52,14 +52,14 @@ library
                      , mtl 
                      , math-functions
                      , mwc-random
-                     , mwc-random-monad
-                     , monad-primitive
                      , optparse-applicative 
                      , parallel
                      , pipes 
                      , pipes-bytestring
                      , pipes-csv
                      , primitive
+                     , random-fu
+                     , random-source
                      , semigroups
                      , tagged
                      , transformers
@@ -90,11 +90,11 @@ Test-Suite spec
   Build-Depends:       base >=4.7 && <5
                      , data-default 
                      , hspec
-                     , mwc-random
-                     , mwc-random-monad
                      , pipes 
                      , primitive
                      , QuickCheck
+                     , random-fu
+                     , random-source
                      , tagged
                      , tau-sigma 
                      , vector
@@ -110,11 +110,11 @@ Benchmark bench
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , criterion
-                     , mwc-random
-                     , mwc-random-monad
                      , parallel
                      , pipes
                      , primitive
+                     , random-fu
+                     , random-source
                      , tagged
                      , tau-sigma 
                      , vector

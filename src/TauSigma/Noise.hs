@@ -10,11 +10,7 @@ module TauSigma.Noise
        ) where
 
 import Control.Lens
-
--- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
--- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
-import Control.Monad.Primitive 
-import Control.Monad.Primitive.Class (MonadPrim)
+import Control.Monad.Primitive (PrimMonad)
 
 import Data.Functor.Compose (Compose(..))
 
@@ -22,14 +18,15 @@ import Data.Csv (Only(..))
 import Data.Default
 import Data.Maybe (catMaybes)
 
+import Data.Random (RVarT, runRVarT)
+import Data.Random.Source.MWC (create)
+    
 import Options.Applicative
 
 import Pipes
 import Pipes.ByteString (stdout)
 import Pipes.Csv 
 import qualified Pipes.Prelude as P
-
-import System.Random.MWC.Monad (Rand, runWithSystemRandomT)
 
 import TauSigma.Types
 import TauSigma.Util.Pipes.Noise
@@ -129,13 +126,14 @@ options = Options <$> length <*> frequency <*> mix
                   
 
 main :: Options -> IO ()
-main opts =
-  runWithSystemRandomT $ runEffect $ mixed (applyDefaults opts)
-          >-> toOutputType (view outputType opts)
-          >-> P.take (view howMany opts)
-          >-> P.map Only
-          >-> encode
-          >-> stdout
+main opts = runRVarT main' =<< create -- FIXME
+  where main' :: RVarT IO ()
+        main' = runEffect $ mixed (applyDefaults opts)
+            >-> toOutputType (view outputType opts)
+            >-> P.take (view howMany opts)
+            >-> P.map Only
+            >-> encode
+            >-> stdout
 
 applyDefaults :: Options -> Options
 applyDefaults opts = over mix go opts
@@ -147,9 +145,7 @@ toOutputType :: Monad m => Domain -> Pipe (TimeData Double) Double m r
 toOutputType Phase = P.map unTagged
 toOutputType Frequency = toFrequency >-> P.map unTagged
 
-mixed
-  :: (MonadPrim m, PrimMonad m) =>
-     Options -> Producer (TimeData Double) (Rand m) ()
+mixed :: PrimMonad m => Options -> Producer (TimeData Double) (RVarT m) ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
                      , auxT (flickerPhase (octaves size)) fpm
