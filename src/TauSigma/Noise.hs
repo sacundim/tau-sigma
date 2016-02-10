@@ -13,6 +13,7 @@ import Control.Lens
 
 -- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
 -- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
+import Control.Monad.Primitive 
 import Control.Monad.Primitive.Class (MonadPrim)
 
 import Data.Functor.Compose (Compose(..))
@@ -146,7 +147,9 @@ toOutputType :: Monad m => Domain -> Pipe (TimeData Double) Double m r
 toOutputType Phase = P.map unTagged
 toOutputType Frequency = toFrequency >-> P.map unTagged
 
-mixed :: MonadPrim m => Options -> Producer (TimeData Double) (Rand m) ()
+mixed
+  :: (MonadPrim m, PrimMonad m) =>
+     Options -> Producer (TimeData Double) (Rand m) ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
                      , auxT (flickerPhase (octaves size)) fpm
