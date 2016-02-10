@@ -33,8 +33,6 @@ import Control.Monad (forever)
 import Control.Monad.Primitive 
 import Control.Monad.Primitive.Class (MonadPrim)
 
-import Data.Bits (countTrailingZeros)
-import Data.Word (Word32)
 import Data.Tagged
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as MU
