@@ -62,7 +62,7 @@ theoBRCases =
              , samples     = sampleSize
              , taus        = (30, 50)
              , expected    = (0.5)
-             , tolerance   = 0.05
+             , tolerance   = 0.1
              , statistic   = theoBRdevs 1
              , noise       = rwfm
              }

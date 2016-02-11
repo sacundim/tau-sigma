@@ -27,35 +27,30 @@ module TauSigma.Util.Pipes.Noise
     ) where
 
 import Control.Monad (forever)
-
--- CONFUSING: 'MonadPrim' (from 'Control.Monad.Primitive.Class') is not the
--- same class as 'PrimMonad' (from 'Control.Monad.Primitive')!!!
-import Control.Monad.Primitive 
-import Control.Monad.Primitive.Class (MonadPrim)
+import Control.Monad.Primitive (PrimMonad(..))
 
 import Data.Bits (countLeadingZeros)
 import Data.Word (Word64)
 import Data.Tagged
+    
+import Data.Random (RVarT, stdUniformT, normalT)
+
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as MU
 
 import Pipes
 import qualified Pipes.Prelude as P
 
-import System.Random.MWC.Monad (Rand)
-import qualified System.Random.MWC.Monad as Rand
-import qualified System.Random.MWC.Distributions.Monad as Dist
-
 import TauSigma.Types
 
 
 -- | White noise is normally distributed with a standard deviation of @n@.
-white :: MonadPrim m => Double -> Producer Double (Rand m) ()
+white :: Monad m => Double -> Producer Double (RVarT m) ()
 {-# INLINABLE white #-} 
-white n = forever (lift (Dist.normal 0.0 n) >>= yield)
+white n = forever (lift (normalT 0.0 n) >>= yield)
 
 -- | Brown noise is integrated white noise.
-brown :: MonadPrim m => Double -> Producer Double (Rand m) ()
+brown :: Monad m => Double -> Producer Double (RVarT m) ()
 {-# INLINABLE brown #-} 
 brown n = white n >-> integrate
 
@@ -66,35 +61,38 @@ brown n = white n >-> integrate
 -- * http://www.firstpr.com.au/dsp/pink-noise/#Stochastic_Voss_McCartney
 -- * http://home.earthlink.net/%7Eltrammell/tech/pinkalg.htm
 flicker
-    :: forall m. (MonadPrim m, PrimMonad m) =>
+    :: forall m. (PrimMonad m) =>
        Int
     -> Double
-    -> Producer Double (Rand m) ()
+    -> Producer Double (RVarT m) ()
 {-# INLINABLE flicker #-} 
-flicker octaves n = lift (MU.replicate (2*octaves) 0.0) >>= go
-  where
-    go :: MU.MVector (PrimState m) Double -> Producer Double (Rand m) ()
-    go state =
-        forever $ do
-          i <- lift (decaying octaves)
-          ri <- lift (Dist.normal 0.0 n)
-          lift (MU.write state i ri)
-          next <- lift (sumMVector state)
-          r <- lift (Dist.normal 0.0 n)
-          yield (r + next)
+flicker octaves n = lift (MU.replicate octaves 0.0) >>= flicker' 
+    where flicker' state = go 0.0
+              where go prev = do
+                      i   <- lift (decaying octaves)
+                      ri  <- lift (normalT 0.0 n)
+                      ri' <- lift (write' state i ri)
+                      let next = prev - ri' + ri 
+                      r   <- lift (normalT 0.0 n)
+                      yield (next + r)
+                      go next
 
 -- | Choose an @i@ in the range @[0,n)@, with probability @0.5^(i+1)@.
 -- Well, except that @n-1@ gets picked inordinately often.
-decaying :: forall m. MonadPrim m => Int -> Rand m Int
+decaying :: forall m. Monad m => Int -> RVarT m Int
 {-# INLINE decaying #-} 
 decaying n = fmap (min (n-1) . countLeadingZeros) word
-   where word :: Rand m Word64
-         word = Rand.uniform 
+   where word :: RVarT m Word64
+         word = stdUniformT
 
-sumMVector :: PrimMonad m => MU.MVector (PrimState m) Double -> m Double
-{-# INLINE sumMVector #-} 
-sumMVector v = fmap U.sum (U.unsafeFreeze v)
-      
+-- | Write to a mutable vector, but returning the value that was replaced.
+write'
+    :: (PrimMonad m, U.Unbox a) =>
+       MU.MVector (PrimState m) a -> Int -> a -> m a
+{-# INLINE write' #-}
+write' v i a = MU.read v i <* MU.write v i a
+         
+
 
 -- | Calculate the number of octaves in a sequence of the given size.
 -- Suitable for passing as argument to 'flicker' and 'flickerFrequency'.
@@ -112,29 +110,29 @@ sinusoid period level = cycle period >-> P.map step
 
 
 
-whitePhase :: MonadPrim m => Double -> Producer (TimeData Double) (Rand m) ()
+whitePhase :: Monad m => Double -> Producer (TimeData Double) (RVarT m) ()
 {-# INLINABLE whitePhase #-} 
 whitePhase n = white n >-> P.map Tagged
 
 flickerPhase
-  :: (MonadPrim m, PrimMonad m) =>
-     Int -> Double -> Producer (TimeData Double) (Rand m) ()
+  :: PrimMonad m =>
+     Int -> Double -> Producer (TimeData Double) (RVarT m) ()
 {-# INLINABLE flickerPhase #-} 
 flickerPhase octaves n = flicker octaves n >-> P.map Tagged
 
 whiteFrequency
-  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
+  :: Monad m => Double -> Producer (FreqData Double) (RVarT m) ()
 {-# INLINABLE whiteFrequency #-} 
 whiteFrequency n = white n >-> P.map Tagged
 
 flickerFrequency
-  :: (MonadPrim m, PrimMonad m) =>
-     Int -> Double -> Producer (FreqData Double) (Rand m) ()
+  :: PrimMonad m =>
+     Int -> Double -> Producer (FreqData Double) (RVarT m) ()
 {-# INLINABLE flickerFrequency #-} 
 flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 
 randomWalkFrequency
-  :: MonadPrim m => Double -> Producer (FreqData Double) (Rand m) ()
+  :: Monad m => Double -> Producer (FreqData Double) (RVarT m) ()
 {-# INLINABLE randomWalkFrequency #-} 
 randomWalkFrequency n = brown n >-> P.map Tagged
 
@@ -179,7 +177,8 @@ differentiate = await >>= differentiate'
       differentiate' cur
 
 
-instance PrimMonad m => PrimMonad (Rand m) where
-  type PrimState (Rand m) = PrimState m
-  primitive = lift . primitive
-  {-# INLINE primitive #-}
+{- TODO: find out if I can get rid of this -}
+instance PrimMonad m => PrimMonad (RVarT m) where
+    type PrimState (RVarT m) = PrimState m
+    primitive = lift . primitive
+    {-# INLINE primitive #-}

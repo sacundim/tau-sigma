@@ -46,7 +46,7 @@ totdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
-             , tolerance   = 0.05
+             , tolerance   = 0.1
              , statistic   = totdevs 1
              , noise       = wpm
              }
@@ -73,7 +73,7 @@ totdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (0.0)
-             , tolerance   = 0.05
+             , tolerance   = 0.055
              , statistic   = totdevs 1
              , noise       = ffm
              }
