@@ -33,24 +33,24 @@ import Data.Bits (countLeadingZeros)
 import Data.Word (Word64)
 import Data.Tagged
     
-import Data.Random (RVarT, stdUniformT, normalT)
-
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as MU
 
 import Pipes
 import qualified Pipes.Prelude as P
 
+import System.Random.MWC.Probability (Prob(..), normal, uniform)
+
 import TauSigma.Types
 
 
 -- | White noise is normally distributed with a standard deviation of @n@.
-white :: Monad m => Double -> Producer Double (RVarT m) ()
+white :: PrimMonad m => Double -> Producer Double (Prob m) ()
 {-# INLINABLE white #-} 
-white n = forever (lift (normalT 0.0 n) >>= yield)
+white n = forever (lift (normal 0.0 n) >>= yield)
 
 -- | Brown noise is integrated white noise.
-brown :: Monad m => Double -> Producer Double (RVarT m) ()
+brown :: PrimMonad m => Double -> Producer Double (Prob m) ()
 {-# INLINABLE brown #-} 
 brown n = white n >-> integrate
 
@@ -64,26 +64,26 @@ flicker
     :: forall m. (PrimMonad m) =>
        Int
     -> Double
-    -> Producer Double (RVarT m) ()
+    -> Producer Double (Prob m) ()
 {-# INLINABLE flicker #-} 
 flicker octaves n = lift (MU.replicate octaves 0.0) >>= flicker' 
     where flicker' state = go 0.0
               where go prev = do
                       i   <- lift (decaying octaves)
-                      ri  <- lift (normalT 0.0 n)
+                      ri  <- lift (normal 0.0 n)
                       ri' <- lift (write' state i ri)
                       let next = prev - ri' + ri 
-                      r   <- lift (normalT 0.0 n)
+                      r   <- lift (normal 0.0 n)
                       yield (next + r)
                       go next
 
 -- | Choose an @i@ in the range @[0,n)@, with probability @0.5^(i+1)@.
 -- Well, except that @n-1@ gets picked inordinately often.
-decaying :: forall m. Monad m => Int -> RVarT m Int
+decaying :: forall m. PrimMonad m => Int -> Prob m Int
 {-# INLINE decaying #-} 
 decaying n = fmap (min (n-1) . countLeadingZeros) word
-   where word :: RVarT m Word64
-         word = stdUniformT
+   where word :: Prob m Word64
+         word = uniform
 
 -- | Write to a mutable vector, but returning the value that was replaced.
 write'
@@ -110,29 +110,29 @@ sinusoid period level = cycle period >-> P.map step
 
 
 
-whitePhase :: Monad m => Double -> Producer (TimeData Double) (RVarT m) ()
+whitePhase :: PrimMonad m => Double -> Producer (TimeData Double) (Prob m) ()
 {-# INLINABLE whitePhase #-} 
 whitePhase n = white n >-> P.map Tagged
 
 flickerPhase
   :: PrimMonad m =>
-     Int -> Double -> Producer (TimeData Double) (RVarT m) ()
+     Int -> Double -> Producer (TimeData Double) (Prob m) ()
 {-# INLINABLE flickerPhase #-} 
 flickerPhase octaves n = flicker octaves n >-> P.map Tagged
 
 whiteFrequency
-  :: Monad m => Double -> Producer (FreqData Double) (RVarT m) ()
+  :: PrimMonad m => Double -> Producer (FreqData Double) (Prob m) ()
 {-# INLINABLE whiteFrequency #-} 
 whiteFrequency n = white n >-> P.map Tagged
 
 flickerFrequency
   :: PrimMonad m =>
-     Int -> Double -> Producer (FreqData Double) (RVarT m) ()
+     Int -> Double -> Producer (FreqData Double) (Prob m) ()
 {-# INLINABLE flickerFrequency #-} 
 flickerFrequency octaves n = flicker octaves n >-> P.map Tagged
 
 randomWalkFrequency
-  :: Monad m => Double -> Producer (FreqData Double) (RVarT m) ()
+  :: PrimMonad m => Double -> Producer (FreqData Double) (Prob m) ()
 {-# INLINABLE randomWalkFrequency #-} 
 randomWalkFrequency n = brown n >-> P.map Tagged
 
@@ -177,8 +177,12 @@ differentiate = await >>= differentiate'
       differentiate' cur
 
 
-{- TODO: find out if I can get rid of this -}
-instance PrimMonad m => PrimMonad (RVarT m) where
-    type PrimState (RVarT m) = PrimState m
+{- TODO: find out if I can get rid of these orphans -}
+
+instance MonadIO m => MonadIO (Prob m) where
+  liftIO m = Prob $ const (liftIO m)
+
+instance PrimMonad m => PrimMonad (Prob m) where
+    type PrimState (Prob m) = PrimState m
     primitive = lift . primitive
     {-# INLINE primitive #-}

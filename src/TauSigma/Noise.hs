@@ -18,8 +18,8 @@ import Data.Csv (Only(..))
 import Data.Default
 import Data.Maybe (catMaybes)
 
-import Data.Random (RVarT, runRVarT)
 import System.Random.MWC (createSystemRandom)
+import System.Random.MWC.Probability (Prob, sample)
     
 import Options.Applicative
 
@@ -127,7 +127,7 @@ options = Options <$> length <*> frequency <*> mix
 
 main :: Options -> IO ()
 main opts = runWithSystemRandom main'
-  where main' :: RVarT IO ()
+  where main' :: Prob IO ()
         main' = runEffect $ mixed (applyDefaults opts)
             >-> toOutputType (view outputType opts)
             >-> P.take (view howMany opts)
@@ -135,8 +135,8 @@ main opts = runWithSystemRandom main'
             >-> encode
             >-> stdout
 
-runWithSystemRandom :: RVarT IO a -> IO a
-runWithSystemRandom ma = runRVarT ma =<< createSystemRandom
+runWithSystemRandom :: Prob IO a -> IO a
+runWithSystemRandom ma = sample ma =<< createSystemRandom
 
 applyDefaults :: Options -> Options
 applyDefaults opts = over mix go opts
@@ -148,7 +148,7 @@ toOutputType :: Monad m => Domain -> Pipe (TimeData Double) Double m r
 toOutputType Phase = P.map unTagged
 toOutputType Frequency = toFrequency >-> P.map unTagged
 
-mixed :: PrimMonad m => Options -> Producer (TimeData Double) (RVarT m) ()
+mixed :: PrimMonad m => Options -> Producer (TimeData Double) (Prob m) ()
 mixed opts =
   zipSum $ catMaybes [ auxT whitePhase wpm
                      , auxT (flickerPhase (octaves size)) fpm

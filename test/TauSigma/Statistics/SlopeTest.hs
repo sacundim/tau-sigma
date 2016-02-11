@@ -12,11 +12,11 @@ module TauSigma.Statistics.SlopeTest
 import Data.Tagged
 import Data.Vector.Unboxed (Vector)
 
-import Data.Random (RVarT, runRVarT)
-import Data.Random.Source.MWC (create)
-    
 import Pipes
 import qualified Pipes.Prelude as P
+
+import System.Random.MWC (create)
+import System.Random.MWC.Probability (Prob, sample)
 
 import Text.Printf
 
@@ -39,7 +39,7 @@ data TestCase
              , expected    :: Slope
              , tolerance   :: Error
              , statistic   :: Statistic
-             , noise       :: Producer (TimeData Double) (RVarT IO) ()
+             , noise       :: Producer (TimeData Double) (Prob IO) ()
              }
 
 -- | Validate that the slope of the tau/sigma plot is more or less
@@ -62,8 +62,8 @@ slopeTest TestCase {..} =
       let failures = badSlopes expected tolerance graph
       failures `shouldBe` []
 
-runWithCreate :: RVarT IO a -> IO a
-runWithCreate ma = runRVarT ma =<< create
+runWithCreate :: Prob IO a -> IO a
+runWithCreate ma = sample ma =<< create
 
 filterKeys :: Ord a => (Tau a, Tau a) -> [TauSigma a] -> [TauSigma a]
 filterKeys (lo,hi) = filter go

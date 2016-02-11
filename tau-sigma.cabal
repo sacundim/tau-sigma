@@ -51,6 +51,7 @@ library
                      , lens 
                      , mtl 
                      , math-functions
+                     , mwc-probability
                      , mwc-random
                      , optparse-applicative 
                      , parallel
@@ -58,8 +59,6 @@ library
                      , pipes-bytestring
                      , pipes-csv
                      , primitive
-                     , random-fu
-                     , random-source
                      , semigroups
                      , tagged
                      , transformers
@@ -90,11 +89,11 @@ Test-Suite spec
   Build-Depends:       base >=4.7 && <5
                      , data-default 
                      , hspec
+                     , mwc-probability
+                     , mwc-random
                      , pipes 
                      , primitive
                      , QuickCheck
-                     , random-fu
-                     , random-source
                      , tagged
                      , tau-sigma 
                      , vector
@@ -110,11 +109,11 @@ Benchmark bench
   Main-Is:             Bench.hs
   Build-Depends:       base >=4.7 && <5
                      , criterion
+                     , mwc-probability
+                     , mwc-random
                      , parallel
                      , pipes
                      , primitive
-                     , random-fu
-                     , random-source
                      , tagged
                      , tau-sigma 
                      , vector
