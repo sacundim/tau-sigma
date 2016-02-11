@@ -53,7 +53,7 @@ theoBRCases =
              , samples     = sampleSize
              , taus        = (30, 50)
              , expected    = (0.0)
-             , tolerance   = 0.25
+             , tolerance   = 0.1
              , statistic   = theoBRdevs 1
              , noise       = ffm
              }
@@ -62,7 +62,7 @@ theoBRCases =
              , samples     = sampleSize
              , taus        = (30, 50)
              , expected    = (0.5)
-             , tolerance   = 0.1
+             , tolerance   = 0.05
              , statistic   = theoBRdevs 1
              , noise       = rwfm
              }

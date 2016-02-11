@@ -29,7 +29,7 @@ hdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
-             , tolerance   = 0.1
+             , tolerance   = 0.065
              , statistic   = hdevs 1
              , noise       = wpm
              }
@@ -38,7 +38,7 @@ hdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
-             , tolerance   = 0.2
+             , tolerance   = 0.18
              , statistic   = hdevs 1
              , noise       = fpm
              }
@@ -56,7 +56,7 @@ hdevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (0.0)
-             , tolerance   = 0.065
+             , tolerance   = 0.05
              , statistic   = hdevs 1
              , noise       = ffm
              }

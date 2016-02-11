@@ -28,7 +28,7 @@ adevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (-1.0)
-             , tolerance   = 0.1
+             , tolerance   = 0.05
              , statistic   = adevs 1
              , noise       = wpm
              }
@@ -55,7 +55,7 @@ adevCases =
              , samples     = sampleSize
              , taus        = (10, 20)
              , expected    = (0.0)
-             , tolerance   = 0.055
+             , tolerance   = 0.05
              , statistic   = adevs 1
              , noise       = ffm
              }
