@@ -16,8 +16,8 @@ import Control.Monad.Primitive (PrimMonad, PrimState)
 
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as M
-import Data.Vector.Fusion.Stream.Monadic (Stream(..), unfoldrM, sized)
-import Data.Vector.Fusion.Stream.Size (Size(..))
+import Data.Vector.Fusion.Bundle.Size (Size(..))
+import Data.Vector.Fusion.Bundle.Monadic (Bundle, unfoldrM, sized)
 
 import Pipes (Producer, yield, next, (>->))
 import qualified Pipes.Prelude as P
@@ -48,8 +48,8 @@ drainToMVector :: (PrimMonad m, M.MVector v a) =>
 {-# INLINE drainToMVector #-}
 drainToMVector producer = M.munstream (drainToMStream producer)
   
--- | Drain the output of a 'Producer' and shove it into a monadic 'Stream'.
-drainToMStream :: Monad m => Producer a m () -> Stream m a
+-- | Drain the output of a 'Producer' and shove it into a monadic 'Bundle'.
+drainToMStream :: Monad m => Producer a m () -> Bundle m v a
 {-# INLINE drainToMStream #-}
 drainToMStream = unfoldrM gen
   where gen producer = do
@@ -74,8 +74,8 @@ takeMVector :: (PrimMonad m, M.MVector v a) =>
 takeMVector n producer = M.munstream (takeMStream n producer)
 
 -- | Take up to @n@ items from the 'Producer' and shove them into a
--- monadic 'Stream'.
-takeMStream :: Monad m => Int -> Producer a m () -> Stream m a
+-- monadic 'Bundle'.
+takeMStream :: Monad m => Int -> Producer a m () -> Bundle m v a
 {-# INLINE takeMStream #-}
 takeMStream n producer = drainToMStream (producer >-> P.take n) `sized` Max n
 
